@@ -19,6 +19,8 @@ require 'zlib'
 # build started from inside the suite would start the suite again. The two
 # exceptions are the pair that proves the test gate works — one with a failing
 # test file in the throwaway tree, one with a passing one.
+require 'build'
+
 class BuildTest < PromptAtelier::TestCase
   REAL_BACKEND = File.join(CODE_ROOT, 'backend')
   PROJECT_ROOT = File.expand_path('..', CODE_ROOT)
@@ -144,6 +146,51 @@ class BuildTest < PromptAtelier::TestCase
   # archive, down to the byte. `SOURCE_DATE_EPOCH` is the convention for asking
   # a build for that, and honouring it is what turns NFA-20 into something a
   # checksum settles.
+  # TF-693 — the commit line of the VERSION file.
+  #
+  # **It said `unknown` for every build, including builds made minutes after a
+  # commit.** The lookup ran in `project_root`, the working folder one level
+  # above the repository, and that folder is deliberately not a repository:
+  # everything private lives there. `git rev-parse` found nothing and the
+  # fallback answered `unknown`.
+  #
+  # Reported by the operator, who saw `commit: unknown` in an archive whose
+  # source was committed. Nothing here had ever asked what the field contains
+  # when a repository is present.
+  #
+  # The repository below is created for this case and thrown away with the rest
+  # of the run. The one this project lives in is never touched.
+  def test_tf693_the_commit_is_read_from_the_repository_not_from_the_folder_above
+    repo = install_dir('commit_probe')
+    FileUtils.mkdir_p(repo)
+    return skip('git is not available here') unless system('git', 'init', '-q', repo)
+
+    %w[user.email probe@example.test user.name Probe].each_slice(2) do |key, value|
+      system('git', '-C', repo, 'config', key, value)
+    end
+    File.write(File.join(repo, 'a.txt'), "x\n")
+    system('git', '-C', repo, 'add', '.', out: File::NULL, err: File::NULL)
+    system('git', '-C', repo, 'commit', '-qm', 'probe', out: File::NULL, err: File::NULL)
+
+    expected = `git -C #{repo.inspect} rev-parse --short HEAD`.strip
+    refute_empty expected, 'the throwaway repository has no commit, so this proves nothing'
+
+    PromptAtelier::Build.stub(:root, repo) do
+      assert_equal expected, PromptAtelier::Build.send(:commit)
+    end
+  end
+
+  # The counter-case that keeps the honest answer honest: without a repository
+  # the field says `unknown` rather than inventing something.
+  def test_tf693_without_a_repository_the_field_stays_unknown
+    plain = install_dir('commit_probe_plain')
+    FileUtils.mkdir_p(plain)
+
+    PromptAtelier::Build.stub(:root, plain) do
+      assert_equal 'unknown', PromptAtelier::Build.send(:commit)
+    end
+  end
+
   def test_tf633b_the_same_source_produces_the_same_archive
     build('--shape=universal', '--format=tar.gz', '--skip-tests', epoch: EPOCH)
     first = File.binread(archives.first)

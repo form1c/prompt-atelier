@@ -294,15 +294,22 @@ module PromptAtelier
                  lines.map { |key, value| format("%-9s %s\n", "#{key}:", value) }.join)
     end
 
-    # `unknown` rather than a guess. This project is not always kept in a
-    # repository, and a commit line that was made up would be worse than none —
-    # it is the field somebody uses to find out which source a package came
-    # from.
+    # `unknown` rather than a guess. A commit line that was made up would be
+    # worse than none, because it is the field somebody uses to find out which
+    # source a package came from.
+    #
+    # **Asked in `root`, not in `project_root`.** The repository is the
+    # development installation directory itself. `project_root` is the working
+    # folder one level above it, which is deliberately **not** a repository:
+    # that is where everything private lives. Asking there found nothing and
+    # answered `unknown` for every build, including builds made minutes after a
+    # commit. Reported by the operator, who saw `commit: unknown` in an archive
+    # whose source was committed.
     def commit
-      success, output = capture('git', '-C', project_root, 'rev-parse', '--short', 'HEAD')
+      success, output = capture('git', '-C', root, 'rev-parse', '--short', 'HEAD')
       return 'unknown' unless success && !output.to_s.strip.empty?
 
-      clean, changes = capture('git', '-C', project_root, 'status', '--porcelain')
+      clean, changes = capture('git', '-C', root, 'status', '--porcelain')
       dirty = clean && !changes.to_s.strip.empty?
       dirty ? "#{output.strip} (with uncommitted changes)" : output.strip
     end
