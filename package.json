@@ -1,0 +1,22 @@
+{
+  "name": "promptatelier",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "npm workspace root. Exists so that node_modules is hoisted to code/ and the test suites in code/tests/frontend/ can resolve their imports. The type declaration covers everything outside frontend/ — the browser tests and their configuration are loaded by Node directly, and without it Node reads them as CommonJS and stops at the first import statement.",
+  "workspaces": [
+    "frontend"
+  ],
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend",
+    "test": "npm run test --workspace frontend"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.1"
+  }
+}

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- The icon a browser asks for on its own. Declared rather than left to
+         the automatic request for /favicon.ico, because the automatic one is
+         a guess: it is not sent by every browser, it is not sent on every
+         page of a single page application, and a declaration is what lets the
+         file be exchanged for another name later.
+
+         Like logo.svg it lives in public/ and is copied into the delivery
+         verbatim — no content hash, so an operator swaps the file in
+         app/public/ and reloads, without a rebuild. -->
+    <link rel="icon" href="/favicon.ico" sizes="128x128" type="image/x-icon" />
+
+    <title>Prompt Atelier</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

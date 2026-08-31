@@ -1,0 +1,15 @@
+source 'https://rubygems.org'
+ruby '>= 3.3'
+
+gem 'sinatra', '~> 4.2'   # Rahmenwerk; zieht rack, rack-protection,
+                          # rack-session, tilt, mustermann, logger mit
+gem 'rackup',  '~> 2.2'   # Rack-Starter; seit Rack 3 eigenes Gem
+gem 'puma',    '~> 8.0'   # Anwendungsserver — ohne ihn kein Betrieb
+gem 'sequel',  '~> 5.0'   # ORM (E-04)
+gem 'sqlite3', '~> 2.0'   # bringt eigene SQLite-Bibliothek mit, siehe 18.3
+gem 'argon2',  '~> 2.3'   # Passwort-Hashing (SEC-01)
+
+group :development, :test do
+  gem 'minitest', '~> 5.0'
+  gem 'rack-test'
+end

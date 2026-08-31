@@ -1,0 +1,106 @@
+# Prompt Atelier configuration template
+#
+# This file is also the source of every default value. A key missing from
+# config.yml takes its value from here, so this file must stay complete. It is
+# versioned with the application.
+#
+# config.yml itself is written by `install` and holds settings specific to one
+# machine. It is not versioned.
+#
+# Every relative path is resolved against the installation directory, meaning
+# the directory that holds app/, config/ and data/. Paths are not resolved
+# against the location of this file, nor against the working directory of the
+# calling process.
+
+server:
+  host: "127.0.0.1"          # 0.0.0.0 only behind a reverse proxy
+  port: 9292
+  base_url: "http://localhost:9292"
+  # Addresses or networks of the reverse proxy in front of the application.
+  # X-Forwarded-For and X-Forwarded-Proto are read only from these senders.
+  # Empty means from none of them, and the actual peer address applies.
+  #
+  # Entering a network that is not yours makes both the sign-in limit and the
+  # audit log worthless, because both are keyed on that address.
+  #
+  # Example: ["127.0.0.1", "10.0.0.0/8"]
+  trusted_proxies: []
+
+database:
+  path: "data/promptatelier.db"
+  # Write-ahead logging. Readers and one writer work at the same time, which is
+  # what keeps the interface responsive while a large import runs. A copy of
+  # the .db file taken while this is on is incomplete. Use the backup script.
+  wal: true
+
+session:
+  # How long a session survives without use, and how long it survives at all.
+  idle_timeout_days: 14
+  absolute_timeout_days: 90
+
+security:
+  # Password hashing. Raising memory_mib or iterations makes both a stolen
+  # database and every sign-in more expensive. One hash costs about 130 ms at
+  # these values.
+  argon2:
+    memory_mib: 64
+    iterations: 3
+    parallelism: 1
+  login_attempts_per_account: 5
+  login_attempts_per_ip: 20
+  lockout_minutes: 15
+  force_https: false          # true as soon as the instance runs behind HTTPS
+  # Self-registration through the sign-in page:
+  #   off       no access from outside, the administrator creates every account
+  #   approval  anyone may register, the administrator releases the account
+  #   open      whoever registers can sign in immediately
+  #
+  # Delivered as "off". An account can read everything shared instance-wide, so
+  # registration opens more than the sign-in page.
+  registration: "off"
+  # Accounts created per sender address and hour. This limits more than the
+  # number of accounts. Every registration computes one Argon2id hash, and
+  # those run one after another, so a loop against this endpoint would put
+  # every genuine sign-in behind it into a queue.
+  registrations_per_hour: 5
+
+backup:
+  keep: 14                    # number of backups kept
+
+retention:
+  revisions_per_prompt: 50
+  revisions_min_days: 90
+  trash_days: 30
+  audit_months: 12
+  # Last defence against a full file system, below the twelve-month rule above.
+  # Once it is reached, the oldest entries are removed. Repeated failed sign-in
+  # attempts are summarised before this limit applies, because otherwise this
+  # limit would itself be the lever for pushing entries out of the log.
+  audit_max_entries: 200000
+  login_attempts_days: 7
+
+logging:
+  level: "info"
+  path: "data/logs"
+  rotate_mb: 20
+  keep_files: 5
+
+# The language of the instance.
+#
+# **Empty means: follow the visitor.** Each browser gets the language it asks
+# for, and English when it asks for one that is not installed. That is the
+# delivered setting. It is deliberately empty rather than "en", because
+# `install` copies this whole file: a value here would end up in every
+# installation and no browser would ever be listened to.
+#
+# Write a language in, for example `de`, and it becomes the language of this
+# instance whatever the browser says. A signed-in person can still choose their
+# own in their profile, and that choice always wins.
+#
+# Delivered are `de`, `en`, `es`, `fr` and `it`. A language the interface does
+# not carry is not an error here. The interface falls back to English, and
+# nothing has to be changed on the server for a new language to work.
+#
+# (`app/locales/` is a different thing and holds only English. That is what the
+# console prints, and it stays English on purpose.)
+locale: ""

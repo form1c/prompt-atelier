@@ -1,0 +1,416 @@
+{
+  "_note": "Die Rendering-Vektoren aus Testkonzept Abschnitt 5, maschinenlesbar. Diese Datei wird von Minitest UND von Vitest gelesen — beide Seiten pruefen gegen dieselben Erwartungswerte. Das ist die Absicherung gegen R-01. Bei Widerspruechen gilt das Testkonzept.",
+  "_fields": {
+    "body": "Prompt-Text",
+    "variables": "key, optional value / default_value / required. Fehlender value = keine Eingabe.",
+    "keywords": "Namen aus \"keywords\" oder aus \"extra_keywords\" des Vektors",
+    "extra_keywords": "nur fuer diesen Vektor gueltige Keywords (TF-132, TF-133)",
+    "expected": "zeichengenau erwarteter finaler Prompt",
+    "unknown_keys": "erwartete Warnungen (unbekannte Schluessel)",
+    "missing_required": "erwartete unbelegte Pflichtvariablen"
+  },
+  "keywords": {
+    "rolle": {
+      "position": "prepend",
+      "sort_order": 10,
+      "text": "Du bist ein erfahrener Fachautor."
+    },
+    "formal": {
+      "position": "append",
+      "sort_order": 10,
+      "text": "Schreibe in einem sachlichen, förmlichen Ton."
+    },
+    "kurz": {
+      "position": "append",
+      "sort_order": 20,
+      "text": "Fasse dich kurz, höchstens 150 Wörter."
+    },
+    "anhang": {
+      "position": "append",
+      "sort_order": 20,
+      "text": "Nenne am Ende zwei Quellen."
+    },
+    "kontext": {
+      "position": "prepend",
+      "sort_order": 20,
+      "text": "Der Text erscheint in einem Fachblog."
+    }
+  },
+  "vectors": [
+    {
+      "id": "TF-101",
+      "title": "Text ohne Variablen und ohne Keywords",
+      "body": "Fasse den folgenden Text zusammen.",
+      "expected": "Fasse den folgenden Text zusammen."
+    },
+    {
+      "id": "TF-102",
+      "title": "Eine Variable mit Eingabe",
+      "body": "Schreibe über {{thema}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "expected": "Schreibe über Kaffee."
+    },
+    {
+      "id": "TF-103",
+      "title": "Eingabe leer, Standardwert vorhanden",
+      "body": "Schreibe über {{thema}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "",
+          "default_value": "Tee"
+        }
+      ],
+      "expected": "Schreibe über Tee."
+    },
+    {
+      "id": "TF-104",
+      "title": "Eingabe leer, kein Standardwert, nicht Pflicht",
+      "body": "Schreibe über {{thema}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "",
+          "required": false
+        }
+      ],
+      "expected": "Schreibe über ."
+    },
+    {
+      "id": "TF-105",
+      "title": "Leerzeichen innerhalb der Klammern",
+      "body": "Schreibe über {{ thema }}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "expected": "Schreibe über Kaffee."
+    },
+    {
+      "id": "TF-106",
+      "title": "Gross- und Kleinschreibung",
+      "body": "Schreibe über {{Thema}} und nochmals {{THEMA}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "expected": "Schreibe über Kaffee und nochmals Kaffee."
+    },
+    {
+      "id": "TF-107",
+      "title": "Mehrfachvorkommen desselben Schluessels",
+      "body": "{{thema}} ist gut. Ich mag {{thema}} sehr.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "expected": "Kaffee ist gut. Ich mag Kaffee sehr."
+    },
+    {
+      "id": "TF-108",
+      "title": "Zwei verschiedene Variablen",
+      "body": "Schreibe über {{thema}} für {{zielgruppe}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        },
+        {
+          "key": "zielgruppe",
+          "value": "Einsteiger"
+        }
+      ],
+      "expected": "Schreibe über Kaffee für Einsteiger."
+    },
+    {
+      "id": "TF-109",
+      "title": "Escape mit Rueckstrich",
+      "body": "Nutze \\{{platzhalter}} als Muster.",
+      "expected": "Nutze {{platzhalter}} als Muster."
+    },
+    {
+      "id": "TF-110",
+      "title": "Unbekannter Schluessel bleibt stehen",
+      "body": "Schreibe über {{thema}} und {{unbekannt}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "expected": "Schreibe über Kaffee und {{unbekannt}}.",
+      "unknown_keys": [
+        "unbekannt"
+      ]
+    },
+    {
+      "id": "TF-111",
+      "title": "Ungueltiger Schluessel: Leerzeichen im Namen",
+      "body": "Nutze {{Mein Thema}} hier.",
+      "expected": "Nutze {{Mein Thema}} hier.",
+      "unknown_keys": []
+    },
+    {
+      "id": "TF-112",
+      "title": "Ungueltiger Schluessel: beginnt mit einer Ziffer",
+      "body": "Nutze {{1thema}} hier.",
+      "expected": "Nutze {{1thema}} hier.",
+      "unknown_keys": []
+    },
+    {
+      "id": "TF-113",
+      "title": "Keine Rekursion",
+      "body": "Schreibe über {{thema}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "{{zielgruppe}}"
+        },
+        {
+          "key": "zielgruppe",
+          "value": "Einsteiger"
+        }
+      ],
+      "expected": "Schreibe über {{zielgruppe}}."
+    },
+    {
+      "id": "TF-114",
+      "title": "Sonderzeichen im Wert",
+      "body": "Thema: {{thema}}",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Grüße & <Zeichen> \"Anführung\""
+        }
+      ],
+      "expected": "Thema: Grüße & <Zeichen> \"Anführung\""
+    },
+    {
+      "id": "TF-115",
+      "title": "Mehrzeiliger Wert",
+      "body": "Vorgabe:\n{{vorgabe}}\nEnde.",
+      "variables": [
+        {
+          "key": "vorgabe",
+          "value": "Zeile A\nZeile B"
+        }
+      ],
+      "expected": "Vorgabe:\nZeile A\nZeile B\nEnde."
+    },
+    {
+      "id": "TF-116",
+      "title": "Ein Keyword mit prepend",
+      "body": "Schreibe einen Text.",
+      "keywords": [
+        "rolle"
+      ],
+      "expected": "Du bist ein erfahrener Fachautor.\n\nSchreibe einen Text."
+    },
+    {
+      "id": "TF-117",
+      "title": "Ein Keyword mit append",
+      "body": "Schreibe einen Text.",
+      "keywords": [
+        "formal"
+      ],
+      "expected": "Schreibe einen Text.\n\nSchreibe in einem sachlichen, förmlichen Ton."
+    },
+    {
+      "id": "TF-118",
+      "title": "prepend und append zusammen",
+      "body": "Schreibe einen Text.",
+      "keywords": [
+        "rolle",
+        "formal"
+      ],
+      "expected": "Du bist ein erfahrener Fachautor.\n\nSchreibe einen Text.\n\nSchreibe in einem sachlichen, förmlichen Ton."
+    },
+    {
+      "id": "TF-119",
+      "title": "Zwei append-Keywords, Reihenfolge nach sort_order",
+      "body": "Schreibe einen Text.",
+      "keywords": [
+        "kurz",
+        "formal"
+      ],
+      "expected": "Schreibe einen Text.\n\nSchreibe in einem sachlichen, förmlichen Ton.\n\nFasse dich kurz, höchstens 150 Wörter."
+    },
+    {
+      "id": "TF-120",
+      "title": "Gleicher sort_order, Reihenfolge nach Name",
+      "body": "Schreibe einen Text.",
+      "keywords": [
+        "kurz",
+        "anhang"
+      ],
+      "expected": "Schreibe einen Text.\n\nNenne am Ende zwei Quellen.\n\nFasse dich kurz, höchstens 150 Wörter."
+    },
+    {
+      "id": "TF-121",
+      "title": "Zwei prepend-Keywords",
+      "body": "Schreibe einen Text.",
+      "keywords": [
+        "kontext",
+        "rolle"
+      ],
+      "expected": "Du bist ein erfahrener Fachautor.\n\nDer Text erscheint in einem Fachblog.\n\nSchreibe einen Text."
+    },
+    {
+      "id": "TF-122",
+      "title": "Kein Keyword aktiv",
+      "body": "Schreibe einen Text.",
+      "expected": "Schreibe einen Text."
+    },
+    {
+      "id": "TF-123",
+      "title": "Drei und mehr Zeilenumbrueche werden auf zwei verkuerzt",
+      "body": "Absatz A.\n\n\n\nAbsatz B.",
+      "expected": "Absatz A.\n\nAbsatz B."
+    },
+    {
+      "id": "TF-124",
+      "title": "Nachgestellte Leerzeichen werden entfernt",
+      "body": "Zeile A   \nZeile B ",
+      "expected": "Zeile A\nZeile B"
+    },
+    {
+      "id": "TF-125",
+      "title": "Zeilenenden werden vereinheitlicht",
+      "body": "Zeile A\r\nZeile B",
+      "expected": "Zeile A\nZeile B"
+    },
+    {
+      "id": "TF-126",
+      "title": "Fuehrende und abschliessende Leerzeilen entfallen",
+      "body": "\n\nSchreibe einen Text.\n\n\n",
+      "expected": "Schreibe einen Text."
+    },
+    {
+      "id": "TF-127",
+      "title": "Pflichtvariable ohne Wert",
+      "body": "Schreibe über {{thema}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "required": true
+        }
+      ],
+      "expected": "Schreibe über .",
+      "missing_required": [
+        "thema"
+      ]
+    },
+    {
+      "id": "TF-128",
+      "title": "Vollstaendiger Durchlauf",
+      "body": "Schreibe einen Blogartikel über {{thema}} für {{zielgruppe}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffeezubereitung"
+        },
+        {
+          "key": "zielgruppe",
+          "value": "Einsteiger"
+        }
+      ],
+      "keywords": [
+        "rolle",
+        "formal",
+        "kurz"
+      ],
+      "expected": "Du bist ein erfahrener Fachautor.\n\nSchreibe einen Blogartikel über Kaffeezubereitung für Einsteiger.\n\nSchreibe in einem sachlichen, förmlichen Ton.\n\nFasse dich kurz, höchstens 150 Wörter."
+    },
+    {
+      "id": "TF-129",
+      "title": "Schreibvarianten mit Leerzeichen gemischt",
+      "body": "{{thema}} — {{Thema}} — {{ THEMA }} — {{ thema}}",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "expected": "Kaffee — Kaffee — Kaffee — Kaffee"
+    },
+    {
+      "id": "TF-130",
+      "title": "Escape neben einer belegten Variablen",
+      "body": "Setze für {{thema}} ein, Muster: \\{{thema}}",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "expected": "Setze für Kaffee ein, Muster: {{thema}}"
+    },
+    {
+      "id": "TF-131",
+      "title": "Maskierte Klammer im eingesetzten Wert",
+      "body": "Thema: {{thema}}",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "\\{{roh}}"
+        }
+      ],
+      "expected": "Thema: {{roh}}"
+    },
+    {
+      "id": "TF-132",
+      "title": "Variablenklammer im Keyword-Text",
+      "body": "Schreibe über {{thema}}.",
+      "variables": [
+        {
+          "key": "thema",
+          "value": "Kaffee"
+        }
+      ],
+      "keywords": [
+        "roh"
+      ],
+      "extra_keywords": {
+        "roh": {
+          "position": "append",
+          "sort_order": 10,
+          "text": "Beispielmuster: {{thema}}"
+        }
+      },
+      "expected": "Schreibe über Kaffee.\n\nBeispielmuster: {{thema}}"
+    },
+    {
+      "id": "TF-133",
+      "title": "Maskierte Klammer im Keyword-Text",
+      "body": "Ein Text.",
+      "keywords": [
+        "maskiert"
+      ],
+      "extra_keywords": {
+        "maskiert": {
+          "position": "append",
+          "sort_order": 10,
+          "text": "Muster: \\{{platzhalter}}"
+        }
+      },
+      "expected": "Ein Text.\n\nMuster: \\{{platzhalter}}"
+    },
+    {
+      "id": "TF-134",
+      "title": "Zeile aus reinen Leerzeichen zwischen Absaetzen",
+      "body": "Absatz A.\n\n   \n\nAbsatz B.",
+      "expected": "Absatz A.\n\nAbsatz B."
+    }
+  ]
+}

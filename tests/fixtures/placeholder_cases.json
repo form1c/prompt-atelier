@@ -1,0 +1,22 @@
+{
+  "_note": "TF-541 — what counts as a placeholder per Requirements 8.2, written down once and answered by both sides. The server substitutes when it renders and when it derives the variable set of a prompt; the browser does the same for the live preview and for the fields that appear while somebody types. Two notions of 'what is a variable' would let a prompt carry metadata for something that never renders, or render something that has no metadata — and neither would raise anything. Read by tests/backend/unit/placeholder_rule_test.rb and tests/frontend/placeholder_rule.test.js.",
+  "cases": [
+    { "key": "name",                                         "valid": true,  "why": "the plain case" },
+    { "key": "año",                                          "valid": true,  "why": "a letter with a tilde" },
+    { "key": "prénom",                                       "valid": true,  "why": "a letter with an accent" },
+    { "key": "città",                                        "valid": true,  "why": "and another" },
+    { "key": "Größe",                                        "valid": true,  "why": "a sharp s" },
+    { "key": "Œuvre",                                        "valid": true,  "why": "a ligature" },
+    { "key": "тема",                                         "valid": true,  "why": "a letter outside Latin" },
+    { "key": "a_1",                                          "valid": true,  "why": "digits and underscores after the first letter" },
+    { "key": "a",                                            "valid": true,  "why": "one letter is enough" },
+    { "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",     "valid": true,  "why": "40 characters is the limit and still a key" },
+    { "key": "2fa",                                          "valid": false, "why": "a digit may not start a key" },
+    { "key": "_privat",                                      "valid": false, "why": "and neither may an underscore" },
+    { "key": "mi variable",                                  "valid": false, "why": "a space inside is not a key" },
+    { "key": "",                                             "valid": false, "why": "nothing between the braces" },
+    { "key": "a-b",                                          "valid": false, "why": "a hyphen is not allowed" },
+    { "key": "wert!",                                        "valid": false, "why": "and no punctuation either" },
+    { "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",    "valid": false, "why": "41 characters is not a variable at all (14.3)" }
+  ]
+}

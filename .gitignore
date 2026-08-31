@@ -1,0 +1,42 @@
+# This directory is the repository. Everything private lives one level above
+# it in the working folder and is therefore out of reach without a rule here.
+# What follows are only things this directory produces by being worked in.
+
+# Dependencies, restorable from the lock files
+node_modules/
+frontend/node_modules/
+backend/vendor/
+backend/.bundle/
+# A bundle command run from here rather than from backend/ leaves it here
+.bundle/
+
+# Configuration of the running installation. The template is versioned.
+config/config.yml
+
+# Runtime data of the development installation
+data/
+
+# Build results
+backend/public/
+release/
+
+# Test output. Traces and instances are redirected to ../test-results by the
+# Playwright configuration, but the HTML report of a CI run is resolved against
+# the configuration directory and lands here.
+playwright-report/
+blob-report/
+test-results/
+
+# Third-party programs, fetched during installation
+tools/*
+!tools/.gitkeep
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.orig
+*.rej
+.idea/
+.vscode/
