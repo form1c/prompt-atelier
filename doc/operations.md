@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Version** | 2.1 |
-| **Date** | 2026-08-30 |
-| **Describes** | Prompt Atelier 1.0.0 |
+| **Version** | 2.2 |
+| **Date** | 2026-09-03 |
+| **Describes** | Prompt Atelier 1.0.1 |
 | **Audience** | Operators during day-to-day operation |
 | **Not covered** | The complete set-up path. See `installation.md`. Working on the source. See `development.md` |
 
@@ -202,6 +202,8 @@ Sets the application up as a service or removes it. Configuration and data are k
 |---|---|
 | none | Linux: user service. Windows: service through NSSM |
 | `--system` | Linux: system service, elevated rights required |
+
+The system service runs as the account that owns the installation directory, not as `root`. Removing a user service leaves `loginctl enable-linger` switched on and says so, together with the command that undoes it.
 
 ### 3.5 `migrate`
 

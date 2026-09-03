@@ -81,6 +81,7 @@
     "start_ok": "The application answered on {url}.",
     "start_failed": "The application did not answer. Start it by hand to see the reason: {command}",
     "needs_answer": "No terminal to ask on, and the answer was not supplied: {question} Use the matching --switch=value.",
+    "using_default": "No terminal to ask on. The default is used: {value}",
     "needs_password": "No terminal to ask on. Supply the password with --admin-password=...",
     "interrupted": "Interrupted. Nothing further was changed; running install again continues where it left off.",
     "done": "Installation complete.",
@@ -108,14 +109,14 @@
     "windows_needs_admin": "Creating a Windows service needs an administrator. If this command prompt was not started with \"Run as administrator\", the service cannot be created and the attempt below will say so.",
     "not_created": "The service was not created. The wrapper reported no error, but the service does not exist afterwards. The usual reason is missing rights: start a command prompt as an administrator and run scripts\\service_install.bat again.",
     "already_there": "A service named {name} is already registered on this machine. Remove it first with scripts\\service_uninstall.bat, then run this script again. It may be left over from an earlier attempt, and a service outlives the directory it was installed from.",
-    "no_bundle_script": "The `bundle` script was not found. Looked in {dir} among others. A service has to be registered against a file that exists, otherwise it registers and never starts. Check that Ruby is installed completely, then run this script again.",
     "log_says": "The service wrote this to {path}:",
     "last_said": "What the wrapper said while reporting success: {output}",
     "nssm_fallback": "As a fallback you can register a scheduled task. It starts at boot but is NOT restarted after a crash, so it is not the same as a service. Run as an administrator:",
     "uninstalled": "Service removed.",
     "uninstall_failed": "The service could not be removed: {path}",
     "already_gone": "There is no service to remove.",
-    "data_kept": "config/ and data/ were left untouched."
+    "data_kept": "config/ and data/ were left untouched.",
+    "linger_kept": "Lingering stays switched on for this account. It is a machine-wide setting that may have been set for something else, so it is not undone here. To switch it off: {command}"
   },
   "backup": {
     "title": "Creating a backup",

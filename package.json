@@ -1,6 +1,6 @@
 {
   "name": "promptatelier",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "npm workspace root. Exists so that node_modules is hoisted to code/ and the test suites in code/tests/frontend/ can resolve their imports. The type declaration covers everything outside frontend/ — the browser tests and their configuration are loaded by Node directly, and without it Node reads them as CommonJS and stops at the first import statement.",

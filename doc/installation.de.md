@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Fassung** | 1.2 |
-| **Stand** | 2026-08-30 |
-| **Beschreibt** | Prompt Atelier 1.0.0 |
+| **Fassung** | 1.3 |
+| **Stand** | 2026-09-03 |
+| **Beschreibt** | Prompt Atelier 1.0.1 |
 | **Zielgruppe** | Betreiber bei Einrichtung und Betrieb einer Installation |
 | **Nicht enthalten** | Arbeit am Quelltext. Siehe `development.de.md` |
 
@@ -50,8 +50,8 @@ Das Skript legt eine eigene Testinstallation mit eigenem Verzeichnis, eigener Da
 Veröffentlicht wird je Fassung ein plattformunabhängiges Archiv, als `.tar.gz` und als `.zip`:
 
 ```
-promptatelier-1.0.0-universal.tar.gz
-promptatelier-1.0.0-universal.zip
+promptatelier-1.0.1-universal.tar.gz
+promptatelier-1.0.1-universal.zip
 ```
 
 Es enthält die Anwendung mit fertig gebauter Oberfläche, jedoch **keine Ruby-Bibliotheken**. Diese bezieht das Installationsskript beim ersten Lauf aus dem Internet, anhand der mitgelieferten Sperrdatei `Gemfile.lock`.
@@ -75,9 +75,18 @@ Plattenplatz, Arbeitsspeicher und die Belegung des vorgesehenen Ports prüft das
 
 | Umgebung | Anforderung |
 |---|---|
-| Linux | Ruby 3.3 oder neuer |
+| Linux | Ruby 3.3 oder neuer, mit Entwicklungsdateien und Übersetzer |
 | Windows | Ruby 3.3 oder neuer, installiert als RubyInstaller mit DevKit |
-| Beide | 500 MB Plattenplatz, 1 GB Arbeitsspeicher, ein freier TCP-Port |
+| Beide | Bundler, 500 MB Plattenplatz, 1 GB Arbeitsspeicher, ein freier TCP-Port |
+
+**Bundler gehört nicht immer zu Ruby.** RubyInstaller bringt es mit. Unter Debian und Ubuntu tut `ruby-full` das nicht, und die Installation bricht im ersten Schritt mit „Bundler is not present" ab. Auf Debian 13 gemessen:
+
+```bash
+sudo apt install -y ruby-full ruby-dev build-essential curl
+sudo gem install bundler -v 4.0.11
+```
+
+Die Fassung ist die in `app/Gemfile.lock` genannte. Auf diesem Weg liegt das Programm in einem Verzeichnis, das sowohl im Suchpfad des gewöhnlichen Benutzers als auch in dem von `root` liegt. Das ist wichtig, sobald die Anwendung später als Systemdienst läuft. Das Distributionspaket `ruby-bundler` führt eine ältere Fassung und lässt Bundler sich bei jeder Installation selbst aktualisieren.
 
 Unter Windows ist DevKit erforderlich, weil mehrere Bibliotheken bei der Installation kompiliert werden. Ohne DevKit bricht die Installation im zweiten Schritt mit einer Compiler-Meldung ab.
 
@@ -103,15 +112,15 @@ Ein Archiv einschließlich der Bibliotheken lässt sich selbst erzeugen. Dafür 
 
 Das erzeugte Archiv enthält die Bibliotheken und benötigt auf der Zielmaschine keinen Internetzugang. **Konfiguration und Daten der Ausgangsinstallation werden nicht übernommen.** Die Zielmaschine fragt bei der Installation nach einem eigenen Verwaltungskonto.
 
-Der Name des erzeugten Archivs nennt Plattform und Ruby-Reihe, etwa `promptatelier-1.0.0-x86_64-linux-gnu-ruby3.3.0.tar.gz`. Es ist ausschließlich für Maschinen dieser Art verwendbar.
+Der Name des erzeugten Archivs nennt Plattform und Ruby-Reihe, etwa `promptatelier-1.0.1-x86_64-linux-gnu-ruby3.3.0.tar.gz`. Es ist ausschließlich für Maschinen dieser Art verwendbar.
 
 ---
 
 ## 2. Installation
 
 ```bash
-tar -xzf promptatelier-1.0.0-universal.tar.gz     # Linux
-cd promptatelier-1.0.0-universal
+tar -xzf promptatelier-1.0.1-universal.tar.gz     # Linux
+cd promptatelier-1.0.1-universal
 scripts/install.sh
 ```
 
@@ -178,11 +187,21 @@ scripts/service_install.sh --system  # Linux: Systemdienst, erhöhte Rechte erfo
 scripts/service_uninstall.sh         # Dienst entfernen, Daten bleiben erhalten
 ```
 
-### 3.1 Linux-Benutzerdienst
+### 3.1 Linux-Dienste
 
-Bei der Einrichtung eines Benutzerdienstes wird `loginctl enable-linger` gesetzt. Ohne diese Einstellung startet der Dienst erst mit der Anmeldung des Benutzers, nach einem Neustart des Servers also möglicherweise gar nicht.
+Der Benutzerdienst ist die Vorgabe. Er benötigt keine Administratorrechte und genügt für eine Maschine mit einem Benutzer.
 
-Der Aufruf erfordert erhöhte Rechte. Schlägt er fehl, wird der Dienst dennoch eingerichtet, die Einschränkung gemeldet und der nachzuholende Befehl ausgegeben.
+Bei seiner Einrichtung wird `loginctl enable-linger` gesetzt. Ohne diese Einstellung startet der Dienst erst mit der Anmeldung des Benutzers, nach einem Neustart des Servers also möglicherweise gar nicht. Ob der Aufruf erhöhte Rechte erfordert, hängt von der Maschine ab. Unter Debian 13 gelang er als gewöhnlicher Benutzer. Schlägt er fehl, wird der Dienst dennoch eingerichtet, die Einschränkung gemeldet und der nachzuholende Befehl ausgegeben.
+
+**Beim Entfernen des Dienstes wird Linger nicht wieder abgeschaltet.** Es ist eine maschinenweite Einstellung, die von etwas anderem stammen kann. `service_uninstall` benennt sie deshalb, statt sie stillschweigend zurückzunehmen, und nennt den Befehl dazu:
+
+```bash
+loginctl disable-linger <benutzer>
+```
+
+Der Systemdienst wird mit `scripts/service_install.sh --system` eingerichtet und erfordert erhöhte Rechte.
+
+> **Achtung:** Der Systemdienst läuft **unter dem Konto, dem das Installationsverzeichnis gehört**, nicht als `root`. Dieses Konto muss `config/` und `data/` schreiben können, und ein Dienst, der dort als `root` schreibt, hinterlässt Dateien, die der Eigentümer anschließend nicht mehr ersetzen kann. Wird die Installation einem anderen Konto übergeben, richten Sie den Dienst neu ein, statt die Einheitendatei zu bearbeiten.
 
 ### 3.2 Windows-Dienst
 

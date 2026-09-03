@@ -154,4 +154,49 @@ class CheckEnvironmentTest < PromptAtelier::TestCase
     end
     assert_includes out, 'Ruby'
   end
+  # TF-696 — the Bundler hint names the version the lockfile asks for.
+  #
+  # Measured in a Debian machine: `ruby-full` brings no Bundler at all, and the
+  # installation stops in its first step. A bare `gem install bundler` works,
+  # but Bundler then upgrades itself on every single installation. The message
+  # may as well name the version that will be needed anyway.
+  def test_tf696_the_bundler_hint_names_the_version_of_the_lockfile
+    wanted = File.readlines(File.join(CODE_ROOT, 'backend', 'Gemfile.lock'))
+                 .last(2).map(&:strip).find { |l| l.match?(/\A\d+\.\d+/) }
+
+    refute_nil wanted, 'the lockfile names no version, so this proves nothing'
+    assert_equal " -v #{wanted}", Checker.send(:bundler_version_switch)
+  end
+
+  # And it stays silent rather than guessing when there is no lockfile to read.
+  def test_tf696_without_a_lockfile_the_hint_names_no_version
+    Checker.stub(:lockfile, '/nonexistent/Gemfile.lock') do
+      assert_equal '', Checker.send(:bundler_version_switch)
+    end
+  end
+  # TF-698 — the detail of the gem message ends cleanly or is empty.
+  #
+  # Measured in a Debian machine: `bundle check` says nothing at all when
+  # Bundler itself is missing, and the sentence then read "for this machine:
+  # <two spaces> Run scripts/install.sh".
+  def test_tf698_an_empty_detail_leaves_no_stray_space
+    assert_equal '', Checker.send(:first_meaningful_line, '')
+    assert_equal '', Checker.send(:first_meaningful_line, "\n \n")
+  end
+
+  def test_tf698_a_detail_carries_its_own_separator
+    assert_equal 'two gems missing ', Checker.send(:first_meaningful_line, 'two gems missing')
+  end
+
+  # And the version is looked for after the marker, not at the end of the file,
+  # so trailing blank lines cannot move it out of view.
+  def test_tf698_the_version_is_found_after_the_marker
+    file = File.join(install_dir('lockfile_probe'), 'Gemfile.lock')
+    FileUtils.mkdir_p(File.dirname(file))
+    File.write(file, "GEM\n  remote: x\n\nBUNDLED WITH\n   4.0.11\n\n\n")
+
+    Checker.stub(:lockfile, file) do
+      assert_equal ' -v 4.0.11', Checker.send(:bundler_version_switch)
+    end
+  end
 end

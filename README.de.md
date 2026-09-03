@@ -43,13 +43,18 @@ Die Anwendung erfordert eine Anmeldung, versendet keine E-Mails und ruft zur Lau
 
 | Umgebung | Anforderung |
 |---|---|
-| Linux | Ruby 3.3 oder neuer |
+| Linux | Ruby 3.3 oder neuer, mit Entwicklungsdateien und Übersetzer |
 | Windows | Ruby 3.3 oder neuer, installiert als RubyInstaller mit DevKit |
-| Beide | 500 MB Plattenplatz, 1 GB Arbeitsspeicher, ein freier TCP-Port |
+| Beide | Bundler, 500 MB Plattenplatz, 1 GB Arbeitsspeicher, ein freier TCP-Port |
 
 Node.js wird für den Betrieb nicht benötigt. Die Oberfläche ist in der Auslieferung fertig gebaut enthalten.
 
-Debian 12 liefert Ruby 3.1 und erfüllt die Anforderung nicht. Debian 13 liefert Ruby 3.3.
+Debian 12 liefert Ruby 3.1 und erfüllt die Anforderung nicht. Debian 13 liefert Ruby 3.3, `ruby-full` bringt dort aber kein Bundler mit. Unter Debian und Ubuntu:
+
+```bash
+sudo apt install -y ruby-full ruby-dev build-essential curl
+sudo gem install bundler -v 4.0.11
+```
 
 Die Anwendung ist für Instanzen mit bis zu 50 Benutzern und 20.000 Prompts ausgelegt.
 
@@ -60,8 +65,8 @@ Die Anwendung ist für Instanzen mit bis zu 50 Benutzern und 20.000 Prompts ausg
 Das Archiv von der [Releases-Seite](../../releases) herunterladen. Angeboten wird ein plattformunabhängiges Archiv, das auf jedem unterstützten System läuft.
 
 ```bash
-tar -xzf promptatelier-1.0.0-universal.tar.gz
-cd promptatelier-1.0.0-universal
+tar -xzf promptatelier-1.0.1-universal.tar.gz
+cd promptatelier-1.0.1-universal
 scripts/install.sh
 ```
 

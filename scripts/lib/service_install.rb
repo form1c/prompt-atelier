@@ -52,7 +52,11 @@ module PromptAtelier
       0
     end
 
-    # The one step of a user service that needs elevated rights (18.1). It may
+    # The one step of a user service that **may** need elevated rights (18.1).
+    # Measured on Debian 13: the call succeeded as the ordinary user, because
+    # polkit grants `org.freedesktop.login1.set-self-linger` to an active local
+    # session without asking. Saying it always needs elevation would send
+    # somebody looking for a rights problem they do not have.
     # fail — and then the service is still set up, because a service that runs
     # after the next login is worth more than none at all. What must not happen
     # is that the failure goes unmentioned: somebody would reboot the machine
@@ -90,13 +94,6 @@ module PromptAtelier
       # language of the machine it runs on. Matching that text would be a check
       # that works in German and not in Polish. The question itself does not
       # depend on a language.
-      # A service pointing at a file that is not there registers cleanly and
-      # then never starts. Asked here, where the answer can still be a sentence.
-      if ServiceUnit.service_command.nil?
-        bad(t('service.no_bundle_script', dir: RbConfig::CONFIG['bindir']))
-        return 1
-      end
-
       if service_exists?
         bad(t('service.already_there', name: ServiceUnit::NAME))
         return 1

@@ -61,6 +61,14 @@ module PromptAtelier
 
       ok(t('service.uninstalled'))
       say(t('service.data_kept'))
+
+      # Named rather than undone. `enable-linger` is a machine-wide setting
+      # that outlives this service and may have been set for something else, so
+      # switching it off here could take away what somebody else relies on.
+      if scope == :user && ServiceUnit.linger_still_set?
+        say(t('service.linger_kept', command: ServiceUnit.disable_linger_command.join(' ')))
+      end
+
       0
     end
 

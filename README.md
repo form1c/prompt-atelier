@@ -44,13 +44,18 @@ The application requires a sign-in, sends no email and calls no external service
 
 | Environment | Requirement |
 |---|---|
-| Linux | Ruby 3.3 or newer |
+| Linux | Ruby 3.3 or newer, with development headers and a compiler |
 | Windows | Ruby 3.3 or newer, installed as RubyInstaller with DevKit |
-| Both | 500 MB of disk space, 1 GB of memory, one free TCP port |
+| Both | Bundler, 500 MB of disk space, 1 GB of memory, one free TCP port |
 
 Node.js is not needed to run the application. The interface ships already built.
 
-Debian 12 provides Ruby 3.1 and does not meet the requirement. Debian 13 provides Ruby 3.3.
+Debian 12 provides Ruby 3.1 and does not meet the requirement. Debian 13 provides Ruby 3.3, but `ruby-full` brings no Bundler. On Debian and Ubuntu:
+
+```bash
+sudo apt install -y ruby-full ruby-dev build-essential curl
+sudo gem install bundler -v 4.0.11
+```
 
 The application is designed for instances of up to 50 users and 20,000 prompts.
 
@@ -61,8 +66,8 @@ The application is designed for instances of up to 50 users and 20,000 prompts.
 Download the archive from the [releases page](../../releases). One platform-independent archive is published, and it runs on every supported system.
 
 ```bash
-tar -xzf promptatelier-1.0.0-universal.tar.gz
-cd promptatelier-1.0.0-universal
+tar -xzf promptatelier-1.0.1-universal.tar.gz
+cd promptatelier-1.0.1-universal
 scripts/install.sh
 ```
 

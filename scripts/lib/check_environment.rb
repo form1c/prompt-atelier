@@ -118,8 +118,30 @@ module PromptAtelier
       if success
         ok(t('environment.checked', name: 'Bundler', version: version_of(output)&.join('.') || output))
       else
-        errors << t('environment.bundler_missing', command: 'gem install bundler')
+        errors << t('environment.bundler_missing', command: "gem install bundler#{bundler_version_switch}")
       end
+    end
+
+    # **The version the lockfile asks for, not just any Bundler.**
+    #
+    # Bundler installs a matching version itself when it finds an older one, so
+    # a bare `gem install bundler` works. It costs a download and a restart on
+    # every single installation, though, and the message may as well name the
+    # version that will be needed anyway. Measured on a Debian machine, where
+    # `ruby-full` brings no Bundler at all and the distribution package carries
+    # an older one.
+    def bundler_version_switch
+      lines = File.readlines(lockfile).map(&:strip)
+      marker = lines.index('BUNDLED WITH')
+      return '' if marker.nil?
+
+      # The line after the marker, not the last line of the file: trailing blank
+      # lines would otherwise move the version out of view. Pointed out in a
+      # Debian run, where the good case was measured and the edge was not.
+      version = lines[marker + 1..]&.find { |l| l.match?(/\A\d+\.\d+/) }
+      version ? " -v #{version}" : ''
+    rescue StandardError
+      ''
     end
 
     # The gems themselves, and this is the check that was missing (BT-02).
@@ -161,11 +183,16 @@ module PromptAtelier
     # [\"aarch64-linux-gnu\", \"aarch64-linux-musl\"," — and the part that named
     # the actual cause ("but your local platform is x64-mingw-ucrt") was in the
     # piece that got cut off. Joined back together and shortened at a word.
+    # **Ends with a separator or is empty, and never with a bare space.**
+    # `bundle check` says nothing at all when Bundler itself is missing, and the
+    # message then read "for this machine:  Run scripts/install.sh" with two
+    # spaces where the detail should have been. Reported from a Debian machine.
     def first_meaningful_line(output)
       sentence = String(output).lines.map(&:strip).reject(&:empty?).join(' ')
-      return sentence if sentence.length <= 160
+      return '' if sentence.empty?
 
-      "#{sentence[0, 160].rpartition(' ').first} …"
+      sentence = "#{sentence[0, 160].rpartition(' ').first} …" if sentence.length > 160
+      "#{sentence} "
     end
 
     # In a delivered installation the way to repair this is `install`, in the

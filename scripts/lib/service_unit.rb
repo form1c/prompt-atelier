@@ -12,6 +12,7 @@
 
 require 'rbconfig'
 require_relative 'common'
+require 'etc'
 
 module PromptAtelier
   module ServiceUnit
@@ -44,7 +45,7 @@ module PromptAtelier
 
         [Service]
         Type=simple
-        WorkingDirectory=#{root}
+        #{scope == :system ? "User=#{owner}\nGroup=#{owner_group}\n" : ''}WorkingDirectory=#{root}
         Environment="RACK_ENV=production"
         Environment="BUNDLE_GEMFILE=#{gemfile}"
         ExecStart=#{quoted(RbConfig.ruby)} #{quoted(entry_point)}
@@ -68,22 +69,32 @@ module PromptAtelier
       path.to_s.include?(' ') ? "\"#{path}\"" : path.to_s
     end
 
-    # The absolute path, not `/usr/bin/env bundle`.
+    # **The system service runs as the account that owns the installation.**
     #
-    # systemd starts services **without a login shell** and with a minimal
-    # PATH. `~/.bashrc` and `~/.profile` are never read, so the shims of
-    # rbenv, rvm and asdf are not on it — `/usr/bin/env bundle` would find
-    # nothing and the service would die with 203/EXEC, on exactly the systems
-    # the version managers were installed for.
-    # The path systemd is given. Windows does not come through here, it has
-    # `service_command` below.
-    def bundle_path
-      success, output = capture('sh', '-c', 'command -v bundle')
-      return output if success && !output.to_s.strip.empty?
+    # Without `User=` a system service runs as root, and Puma then writes
+    # `data/promptatelier.pid` as root into a directory belonging to somebody
+    # else. Puma does not remove that file when it is killed, and the owner of
+    # the installation cannot overwrite a root-owned file. The next start, by
+    # the user service or the portable mode, binds the port, then dies in
+    # `write_pid` with `Errno::EACCES` and goes into a restart loop. The cause
+    # sits two lines below a line that reads like a successful start.
+    #
+    # Measured in a Debian machine, each link of that chain separately.
+    #
+    # The owner of the installation directory is the right account by
+    # construction: it is the one that has to be able to write `config/` and
+    # `data/`. Where root owns the installation, `User=root` is what the unit
+    # had all along and the problem does not arise.
+    def owner
+      Etc.getpwuid(File.stat(root).uid).name
+    rescue StandardError
+      Etc.getlogin || 'root'
+    end
 
-      # Last resort: the interpreter that is running this script knows where
-      # its own tools live. Better than a name systemd cannot resolve.
-      File.join(RbConfig::CONFIG['bindir'], 'bundle')
+    def owner_group
+      Etc.getgrgid(File.stat(root).gid).name
+    rescue StandardError
+      owner
     end
 
     def unit_path(scope:, home: Dir.home)
@@ -122,15 +133,34 @@ module PromptAtelier
     end
 
     # A user service starts with the **user session**, not with the machine.
-    # After a reboot nothing would run until somebody logs in — BT-06 and
-    # A-20 would both be unmet. This is the one step at a user service that
-    # needs elevated rights (18.1), and it is allowed to fail: the service is
-    # set up either way, and the command to catch up is named.
+    # After a reboot nothing would run until somebody logs in, and the promise
+    # of an automatic start would be unmet.
+    #
+    # Whether this needs elevated rights depends on the machine. Measured on
+    # Debian 13: the call succeeded as the ordinary user, because polkit grants
+    # `set-self-linger` to an active local session without asking. Elsewhere it
+    # may not, so the call is allowed to fail: the service is set up either way
+    # and the command to catch up is named.
     def linger_command(user: Etc.getlogin || ENV.fetch('USER', nil))
       ['loginctl', 'enable-linger', user.to_s]
     end
 
     def linger_needed?(scope) = scope == :user
+
+    # **Not undone when the service is removed, and said rather than done.**
+    # `enable-linger` is a machine-wide setting that outlives the service, and
+    # it may have been set by something else entirely. Switching it off could
+    # therefore take away what somebody else relies on. Measured in a Debian
+    # machine: after `service_uninstall` the unit files are gone and
+    # `Linger=yes` remains.
+    def linger_still_set?(user: Etc.getlogin || ENV.fetch('USER', nil))
+      success, output = capture('loginctl', 'show-user', user.to_s, '-p', 'Linger')
+      success && output.to_s.strip == 'Linger=yes'
+    end
+
+    def disable_linger_command(user: Etc.getlogin || ENV.fetch('USER', nil))
+      ['loginctl', 'disable-linger', user.to_s]
+    end
 
     # --- Windows -----------------------------------------------------------
 
@@ -177,27 +207,6 @@ module PromptAtelier
     # The entry point sets its own environment, so the `Environment=` lines of
     # the unit below are a second belt rather than the thing it hangs on.
 
-
-    # **Where the `bundle` script really is, asked rather than assumed.**
-    #
-    # `RbConfig::CONFIG['bindir']` is the obvious guess and is not always
-    # right. On a Debian machine it names `/usr/bin/bundle`, and that file does
-    # not exist there. A service registered against a path that is not there
-    # cannot start, and NSSM reports that only as a paused service, which says
-    # nothing about the cause. So the candidates are tried and the first one
-    # that is a file wins.
-    def bundle_script
-      candidates = [File.join(RbConfig::CONFIG['bindir'], 'bundle'),
-                    File.join(Gem.bindir, 'bundle'),
-                    File.join(Gem.user_dir, 'bin', 'bundle')]
-
-      # PATH last and searched here rather than through a shell. `sh` does not
-      # exist on Windows, and this has to answer the same way on both.
-      candidates += ENV.fetch('PATH', '').split(File::PATH_SEPARATOR)
-                       .map { |dir| File.join(dir, 'bundle') }
-
-      candidates.uniq.find { |path| File.file?(path) }
-    end
 
     def service_log = File.join(root, 'data', 'logs', 'service.log')
 

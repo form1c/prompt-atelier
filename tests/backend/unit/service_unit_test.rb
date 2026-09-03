@@ -139,6 +139,29 @@ class ServiceUnitTest < PromptAtelier::TestCase
     end
   end
 
+  # TF-694 — the system service does not run as root.
+  #
+  # **Measured in a Debian machine, link by link.** Without `User=` a system
+  # service runs as root, and Puma writes `data/promptatelier.pid` as root into
+  # a directory belonging to somebody else. Puma does not remove that file when
+  # it is killed. The owner of the installation then cannot overwrite it, so the
+  # next start binds the port, dies in `write_pid` with `Errno::EACCES` and goes
+  # into a restart loop. Whoever tries the system service and then pulls the
+  # plug can afterwards start neither the user service nor the portable mode.
+  def test_the_system_service_runs_as_the_owner_of_the_installation
+    unit = Subject.systemd_unit(scope: :system)
+    expected = Etc.getpwuid(File.stat(Subject.send(:root)).uid).name
+
+    assert_includes unit, "User=#{expected}"
+    assert_includes unit, 'Group='
+  end
+
+  # A user service already runs as that user. Naming it again would be a second
+  # place to keep right.
+  def test_a_user_service_names_no_account
+    refute_includes Subject.systemd_unit(scope: :user), 'User='
+  end
+
   # --- user and system service ---------------------------------------------
 
   def test_the_two_scopes_differ_in_target_and_in_path
@@ -243,7 +266,7 @@ class ServiceUnitTest < PromptAtelier::TestCase
     assert_equal RbConfig.ruby, program, 'the interpreter is the executable, bundle is its argument'
   end
 
-  # TF-684 and TF-687 — what NSSM is told to start.
+  # TF-684 — what NSSM is told to start.
   #
   # **Three attempts got this wrong, and two of them were mine.** NSSM starts
   # the application with CreateProcess, which needs a real executable: the

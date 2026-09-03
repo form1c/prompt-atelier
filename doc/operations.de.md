@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Fassung** | 2.1 |
-| **Stand** | 2026-08-30 |
-| **Beschreibt** | Prompt Atelier 1.0.0 |
+| **Fassung** | 2.2 |
+| **Stand** | 2026-09-03 |
+| **Beschreibt** | Prompt Atelier 1.0.1 |
 | **Zielgruppe** | Betreiber im laufenden Betrieb |
 | **Nicht enthalten** | Der durchgehende Einrichtungsweg. Siehe `installation.de.md`. Arbeit am Quelltext. Siehe `development.de.md` |
 
@@ -202,6 +202,8 @@ Richtet die Anwendung als Dienst ein oder entfernt sie. Konfiguration und Daten 
 |---|---|
 | ohne | Linux: Benutzerdienst. Windows: Dienst über NSSM |
 | `--system` | Linux: Systemdienst, erhöhte Rechte erforderlich |
+
+Der Systemdienst läuft unter dem Konto, dem das Installationsverzeichnis gehört, nicht als `root`. Beim Entfernen eines Benutzerdienstes bleibt `loginctl enable-linger` gesetzt. Das Skript weist darauf hin und nennt den Befehl, der es zurücknimmt.
 
 ### 3.5 `migrate`
 

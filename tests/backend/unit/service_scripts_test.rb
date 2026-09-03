@@ -118,20 +118,6 @@ class ServiceScriptsTest < PromptAtelier::TestCase
     refute_includes out, 'already registered', 'a free name must not look taken'
   end
 
-  # --- a path that is not there (TF-687) -------------------------------------
-
-  def test_a_missing_bundle_script_stops_before_anything_is_registered
-    out, = capture_io do
-      PromptAtelier::ServiceUnit.stub(:nssm_available?, true) do
-        PromptAtelier::ServiceUnit.stub(:service_command, nil) do
-          assert_equal 1, Install.send(:windows_service, [])
-        end
-      end
-    end
-
-    assert_includes out, 'was not found'
-  end
-
   # --- what the service itself said (TF-686) --------------------------------
 
   # Four device tests ended with "send me the log file". The script can read it.
@@ -151,6 +137,40 @@ class ServiceScriptsTest < PromptAtelier::TestCase
     assert_includes out, 'command not found: puma'
   ensure
     FileUtils.rm_f(log)
+  end
+
+  # --- what the removal leaves behind (TF-695) -------------------------------
+
+  # Measured in a Debian machine: after `service_uninstall` the unit files are
+  # gone and `Linger=yes` remains. The setting is machine-wide and may have been
+  # set by something else, so it is named rather than undone.
+  def test_the_removal_says_that_lingering_stays_on
+    assert_includes removal_output(lingering: true), 'Lingering stays switched on'
+    assert_includes removal_output(lingering: true), 'disable-linger'
+  end
+
+  def test_it_says_nothing_when_lingering_was_never_set
+    refute_includes removal_output(lingering: false), 'Lingering stays switched on'
+  end
+
+  # A unit file has to exist, otherwise the removal answers "there is no service
+  # to remove" and never reaches the line under test. Written into a throwaway
+  # directory and deleted by the plan itself.
+  def removal_output(lingering:)
+    unit = File.join(install_dir('linger_probe'), 'promptatelier.service')
+    FileUtils.mkdir_p(File.dirname(unit))
+    File.write(unit, "[Unit]\n")
+
+    out, = capture_io do
+      PromptAtelier::ServiceUnit.stub(:unit_path, unit) do
+        PromptAtelier::ServiceUnit.stub(:linger_still_set?, lingering) do
+          Uninstall.stub(:available?, true) do
+            Uninstall.stub(:capture, [true, '']) { Uninstall.send(:linux_service, :user) }
+          end
+        end
+      end
+    end
+    out
   end
 
   # --- carrying out a plan (TF-683) ----------------------------------------

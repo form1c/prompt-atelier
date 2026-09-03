@@ -147,4 +147,40 @@ class InstallAnswersTest < PromptAtelier::TestCase
     refute_includes spawn_body, "'bundle'",
                     'a wrapper process is not the process that holds the port'
   end
+  # TF-697 — a question that shows a default answers itself without a terminal.
+  #
+  # **Measured in a Debian machine.** A non-interactive installation without
+  # `--port` printed the question including its default `[9292]` and then
+  # refused, and it did so **after** step 2, once eighteen gems had been fetched
+  # and four compiled. In a deployment or a pipeline that reads like a failure.
+  def test_tf697_a_default_is_used_when_there_is_nobody_to_ask
+    answer = nil
+    out, = capture_io do
+      without_terminal { answer = Install.send(:ask, 'Which port?', default: 9292) }
+    end
+
+    assert_equal '9292', answer
+    assert_includes out, '9292'
+  end
+
+  # And a question without a default still refuses. There is no sensible
+  # default for the address or the password of the first account.
+  def test_tf697_a_question_without_a_default_still_refuses
+    answer = :untouched
+    capture_io { without_terminal { answer = Install.send(:ask, 'E-mail address?') } }
+
+    assert_nil answer
+  end
+
+  private
+
+  # `$stdin.tty?` decides the branch. Replaced for the length of the block.
+  def without_terminal
+    original = $stdin
+    $stdin = File.open(File::NULL)
+    yield
+  ensure
+    $stdin.close
+    $stdin = original
+  end
 end

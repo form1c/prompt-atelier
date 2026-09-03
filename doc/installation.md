@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Version** | 1.2 |
-| **Date** | 2026-08-30 |
-| **Describes** | Prompt Atelier 1.0.0 |
+| **Version** | 1.3 |
+| **Date** | 2026-09-03 |
+| **Describes** | Prompt Atelier 1.0.1 |
 | **Audience** | Operators setting up and running an installation |
 | **Not covered** | Working on the source. See `development.md` |
 
@@ -50,8 +50,8 @@ The script creates its own test installation with its own directory, database an
 One platform-independent archive is published per release, as `.tar.gz` and as `.zip`:
 
 ```
-promptatelier-1.0.0-universal.tar.gz
-promptatelier-1.0.0-universal.zip
+promptatelier-1.0.1-universal.tar.gz
+promptatelier-1.0.1-universal.zip
 ```
 
 It contains the application with the interface already built, but **no Ruby libraries**. The installer fetches those on its first run, guided by the bundled lock file `Gemfile.lock`.
@@ -73,9 +73,18 @@ The script checks Ruby, Bundler and the Ruby libraries, and reports every missin
 
 | Environment | Requirement |
 |---|---|
-| Linux | Ruby 3.3 or newer |
+| Linux | Ruby 3.3 or newer, with development headers and a compiler |
 | Windows | Ruby 3.3 or newer, installed as RubyInstaller with DevKit |
-| Both | 500 MB of disk space, 1 GB of memory, one free TCP port |
+| Both | Bundler, 500 MB of disk space, 1 GB of memory, one free TCP port |
+
+**Bundler is not always part of Ruby.** RubyInstaller brings it. On Debian and Ubuntu, `ruby-full` does not, and the installation stops in its first step with "Bundler is not present". Measured on Debian 13:
+
+```bash
+sudo apt install -y ruby-full ruby-dev build-essential curl
+sudo gem install bundler -v 4.0.11
+```
+
+The version is the one named in `app/Gemfile.lock`. Installing it this way puts the program in a directory that is on the path of the ordinary user and of `root`, which matters when the application later runs as a system service. The distribution package `ruby-bundler` carries an older version and makes Bundler upgrade itself on every install.
 
 Disk space, memory and whether the intended port is free are **not** checked by the script. Those three have to be verified by hand. A port already in use surfaces only in the last step of the installation, and does so with a clear message.
 
@@ -103,15 +112,15 @@ An archive including the libraries can be produced yourself. This requires a mac
 
 The resulting archive contains the libraries and needs no internet access on the target machine. **Configuration and data of the source installation are not carried over.** The target machine asks for an administrative account of its own during installation.
 
-The name of the archive states the platform and the Ruby series, for example `promptatelier-1.0.0-x86_64-linux-gnu-ruby3.3.0.tar.gz`. It is usable only on machines of that kind.
+The name of the archive states the platform and the Ruby series, for example `promptatelier-1.0.1-x86_64-linux-gnu-ruby3.3.0.tar.gz`. It is usable only on machines of that kind.
 
 ---
 
 ## 2. Installation
 
 ```bash
-tar -xzf promptatelier-1.0.0-universal.tar.gz     # Linux
-cd promptatelier-1.0.0-universal
+tar -xzf promptatelier-1.0.1-universal.tar.gz     # Linux
+cd promptatelier-1.0.1-universal
 scripts/install.sh
 ```
 
@@ -180,11 +189,21 @@ scripts/service_uninstall.sh         # remove the service, data is kept
 
 The examples in this guide use the Linux form. On Windows the file of the same name with the `.bat` extension applies, so `scripts\backup.bat` instead of `scripts/backup.sh`.
 
-### 3.1 Linux user service
+### 3.1 Linux services
 
-Setting up a user service also sets `loginctl enable-linger`. Without it the service starts only when the user logs in, which after a server reboot may mean not at all.
+The user service is the default. It needs no administrator and is enough for a machine with one user.
 
-The call requires elevated rights. If it fails, the service is set up regardless, the limitation is reported, and the command to run later is printed.
+Setting it up also calls `loginctl enable-linger`. Without it the service starts only when the user logs in, which after a server reboot may mean not at all. Whether that call needs elevated rights depends on the machine. On Debian 13 it succeeded as the ordinary user. If it fails, the service is set up regardless, the limitation is reported, and the command to run later is printed.
+
+**Lingering is not switched off again when the service is removed.** It is a machine-wide setting that may have been set for something else, so `service_uninstall` names it instead of undoing it, together with the command:
+
+```bash
+loginctl disable-linger <user>
+```
+
+The system service is set up with `scripts/service_install.sh --system` and needs elevated rights.
+
+> **Warning:** The system service runs **as the account that owns the installation directory**, not as `root`. That account has to be able to write `config/` and `data/`, and a service writing there as `root` would leave files the owner cannot replace afterwards. If you move the installation to another account, set it up again rather than editing the unit file.
 
 ### 3.2 Windows service
 

@@ -214,7 +214,7 @@ module PromptAtelier
       default = template_port
 
       loop do
-        answer = ask(t('install.ask_port', port: default))
+        answer = ask(t('install.ask_port', port: default), default: default)
         return nil if answer.nil?
 
         port = answer.strip.empty? ? default : answer.to_i
@@ -405,7 +405,7 @@ module PromptAtelier
 
     def ask_mode
       loop do
-        answer = ask(t('install.ask_mode'))
+        answer = ask(t('install.ask_mode'), default: 'portable')
         return nil if answer.nil?
         return 'portable' if answer.strip.empty?
 
@@ -516,10 +516,26 @@ module PromptAtelier
     # pipeline for ever. Naming the switch that would have supplied the answer
     # is the difference between a script that failed and one that told you how
     # to succeed (BT-15).
-    def ask(question)
+    # **A question that shows a default answers itself when nobody is there.**
+    #
+    # Without a terminal this used to print the question, default and all, and
+    # then refuse. Measured in a Debian machine: a non-interactive installation
+    # without `--port` stopped **after** step 2, so eighteen gems had been
+    # fetched and four compiled before anything said what was missing. In a
+    # deployment or a pipeline, which is what the switches exist for, that
+    # reads like a failure.
+    #
+    # A question without a default still refuses. There is no sensible default
+    # for the name, the address or the password of the first account.
+    def ask(question, default: nil)
       unless $stdin.tty?
-        bad(t('install.needs_answer', question: question))
-        return nil
+        if default.nil?
+          bad(t('install.needs_answer', question: question))
+          return nil
+        end
+
+        say(t('install.using_default', value: default))
+        return default.to_s
       end
 
       print("   #{question} ")
