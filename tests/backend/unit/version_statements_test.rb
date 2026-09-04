@@ -53,7 +53,42 @@ class VersionStatementsTest < PromptAtelier::TestCase
     assert_operator found, :>, 5, 'no version statement was read, so the check above proves nothing'
   end
 
+  # TF-699 — the changelog names the version that is being built.
+  #
+  # **The one invariant `backend/version.rb` can be checked against.** Every
+  # other case in this file compares *against* that file, so a forgotten bump
+  # there leaves them all green. The changelog is the second place a release
+  # is written down by hand, and the two have to agree.
+  #
+  # It catches both halves of the same slip: a version raised without a
+  # changelog entry, and a changelog entry written without raising the version.
+  def test_tf699_the_newest_changelog_entry_names_the_current_version
+    assert_equal VERSION, changelog_versions.first,
+                 'the newest entry of CHANGELOG.md and backend/version.rb disagree'
+  end
+
+  # And the entries descend. An entry inserted in the wrong place would
+  # otherwise pass the case above whenever it happened to land on top.
+  def test_tf699_the_changelog_entries_descend
+    parts = changelog_versions.map { |v| v.split('.').map(&:to_i) }
+
+    assert_operator parts.size, :>=, 1, 'no version headings found at all'
+    assert_equal parts.sort.reverse, parts, "out of order: #{changelog_versions.inspect}"
+  end
+
+  # The counter-check: without it the two cases above would pass over a file in
+  # which the pattern matches nothing.
+  def test_tf699_the_changelog_is_actually_read
+    refute_empty changelog_versions, 'no `## [x.y.z]` heading was found'
+  end
+
   private
+
+  def changelog_versions
+    File.read(File.join(CODE_ROOT, 'CHANGELOG.md'), encoding: 'UTF-8')
+        .scan(/^## \[(\d+\.\d+\.\d+)\]/).flatten
+  end
+
 
   # The delivered documents. `CHANGELOG.md` is left out on purpose: it names
   # every released version by design, and older entries have to keep standing.

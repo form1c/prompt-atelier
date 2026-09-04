@@ -28,15 +28,31 @@ module PromptAtelier
 
     module_function
 
+    # **Returned rather than set, so that it can be examined.**
+    #
+    # The case that covered this used to read the source of this file and look
+    # for the string `ENV['BUNDLE_PATH']`. That stays green over code inside a
+    # dead branch, over a commented-out line and over a mention in a comment. A
+    # value a test can compare is worth more than a line a test can find.
+    def service_environment
+      {
+        'RACK_ENV'          => 'production',
+        'BUNDLE_GEMFILE'    => gemfile,
+        'BUNDLE_PATH'       => File.join(app_dir, 'vendor', 'bundle'),
+        'BUNDLE_APP_CONFIG' => File.join(app_dir, '.bundle'),
+        'BUNDLE_WITHOUT'    => 'development:test'
+      }
+    end
+
+    # The server, taken from the loaded specification. Needs the bundle to be
+    # set up, so it is called after `activate_gems!` and not before.
+    def puma_executable = Gem.bin_path('puma', 'puma')
+
     def run(_argv = [])
       # Everything Bundler would otherwise look for relative to a home
       # directory. A service does not run under the account that installed it,
       # so nothing here may be left to be discovered.
-      ENV['RACK_ENV']          = 'production'
-      ENV['BUNDLE_GEMFILE']    = gemfile
-      ENV['BUNDLE_PATH']       = File.join(app_dir, 'vendor', 'bundle')
-      ENV['BUNDLE_APP_CONFIG'] = File.join(app_dir, '.bundle')
-      ENV['BUNDLE_WITHOUT']    = 'development:test'
+      service_environment.each { |name, value| ENV[name] = value }
 
       Dir.chdir(root)
       activate_gems!
@@ -59,7 +75,7 @@ module PromptAtelier
       # specification instead and answers with the file inside the bundle. No
       # PATH is involved at any point.
       ARGV.replace(['-C', puma_config])
-      load Gem.bin_path('puma', 'puma')
+      load puma_executable
     end
 
   end

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../test_helper'
+require 'service_run'
 require 'etc'
 
 $LOAD_PATH.unshift(File.join(CODE_ROOT, 'scripts', 'lib'))
@@ -221,12 +222,29 @@ class ServiceUnitTest < PromptAtelier::TestCase
   end
 
   # The environment moved into the entry point, so that is where it has to be.
+  #
+  # **This case used to read the source of that file and look for the string
+  # `ENV['BUNDLE_PATH']`.** That stays green over a line inside a dead branch,
+  # over a commented-out line and over a mention in a comment. It now asks the
+  # entry point for the environment and compares the values.
   def test_the_entry_point_sets_the_environment_the_plan_no_longer_does
-    source = File.read(File.join(CODE_ROOT, 'scripts', 'lib', 'service_run.rb'))
+    environment = PromptAtelier::ServiceRun.service_environment
 
-    %w[RACK_ENV BUNDLE_GEMFILE BUNDLE_PATH BUNDLE_APP_CONFIG].each do |name|
-      assert_includes source, "ENV['#{name}']", "#{name} is set nowhere now"
+    assert_equal 'production', environment['RACK_ENV']
+    assert_equal PromptAtelier::ServiceRun.send(:gemfile), environment['BUNDLE_GEMFILE']
+    %w[BUNDLE_PATH BUNDLE_APP_CONFIG].each do |name|
+      assert environment[name].to_s.start_with?(PromptAtelier::ServiceRun.send(:app_dir)),
+             "#{name} points outside the installation: #{environment[name].inspect}"
     end
+  end
+
+  # The counter-check on the same values: every one of them names a path that
+  # is really there. A setting pointing at nothing would pass the case above.
+  def test_the_paths_of_that_environment_exist
+    environment = PromptAtelier::ServiceRun.service_environment
+
+    assert File.file?(environment['BUNDLE_GEMFILE']), environment['BUNDLE_GEMFILE']
+    assert File.directory?(environment['BUNDLE_APP_CONFIG']), environment['BUNDLE_APP_CONFIG']
   end
 
   # TF-683 — **the exit code of `install` was taken as evidence and was not.**
@@ -321,13 +339,16 @@ class ServiceUnitTest < PromptAtelier::TestCase
   #
   # Adding that directory to the PATH would fix one account on one machine and
   # would make a portable installation depend on somebody's profile.
+  # **Asked, not read.** This case used to look for the string
+  # `Gem.bin_path('puma', 'puma')` in the source, which proves only that
+  # somebody typed it.
   def test_the_entry_point_resolves_puma_from_the_bundle
-    source = File.read(File.join(CODE_ROOT, 'scripts', 'lib', 'service_run.rb'))
+    path = PromptAtelier::ServiceRun.puma_executable
 
-    assert_includes source, "Gem.bin_path('puma', 'puma')",
-                    'the specification answers with the file inside the bundle'
-    refute_includes source, "'exec', 'puma'",
-                    'bundle exec goes through the PATH, which is what failed'
+    assert File.file?(path), "#{path} does not exist"
+    assert_includes path, File.join('vendor', 'bundle'),
+                    "resolved outside the bundle: #{path}"
+    assert_equal 'puma', File.basename(path)
   end
 
   # Where a service that will not start says why. Two device tests were needed
