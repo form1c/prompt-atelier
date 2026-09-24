@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { account } from './instance.js'
+import { account, adminAccount } from './instance.js'
 
 // W-8 in a real browser (TF-357).
 //
@@ -14,14 +14,21 @@ import { account } from './instance.js'
 // create themselves and take it away again, because an import that landed in
 // *Marketing* would change what every other file finds there.
 
+// **Five transfers a minute per person, and Martin's are spent.** SEC-19 lets
+// one person import or export at most five times a minute, and the cases
+// below that sign in as Martin make exactly five such calls between them. A
+// sixth one in this file is refused with 429, and the refusal lands on
+// whichever case comes last, not on the one that added the call. So a new
+// case that imports signs in as somebody else. The preview does not count.
 const { email, password } = account()
+const admin = adminAccount()
 
-async function signIn (page) {
+async function signIn (page, who = { email, password, name: 'Martin' }) {
   await page.goto('/')
-  await page.getByLabel('E-Mail-Adresse', { exact: true }).fill(email)
-  await page.getByLabel('Passwort', { exact: true }).fill(password)
+  await page.getByLabel('E-Mail-Adresse', { exact: true }).fill(who.email)
+  await page.getByLabel('Passwort', { exact: true }).fill(who.password)
   await page.getByRole('button', { name: 'Anmelden', exact: true }).click()
-  await expect(page.getByRole('banner')).toContainText('Martin')
+  await expect(page.getByRole('banner')).toContainText(who.name)
 }
 
 async function switchTo (page, name) {
@@ -95,6 +102,47 @@ test('W-8: import a file, with a preview before anything is written', async ({ p
   await expect(page.getByLabel(/thema/i)).toBeVisible()
 
   await removeWorkspace(page, 'Einspielraum')
+})
+
+// TF-347m through the real server: new entries can be left behind. Asked for
+// by users, who wanted a few prompts out of a backup and could only take all.
+// What only this level shows is that the positions the screen sends are the
+// ones the server reads, for prompts and keywords alike.
+test('leaves a new prompt and a new keyword behind when told to', async ({ page }) => {
+  // Thomas, not Martin: see the transfer budget at the top of this file.
+  await signIn(page, { ...admin, name: 'Thomas' })
+  await ownWorkspace(page, 'Auswahlraum')
+  await goTo(page, 'Import/Export')
+
+  await fileField(page).setInputFiles({
+    name: 'export.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      format: 'promptatelier-export', version: 2, workspace: { name: 'Irgendwo' },
+      keywords: [{ name: 'knapp', description: '', text: 'Sei knapp.', position: 'append', sort_order: 0 }],
+      prompts: [
+        { title: 'Behalten', body: 'Fasse zusammen.', default_keywords: ['knapp'] },
+        { title: 'Weglassen', body: 'Schreibe einen Gruss.' }
+      ]
+    }))
+  })
+
+  await page.getByLabel('Entscheidung für Weglassen').selectOption('skip')
+  await page.getByLabel('Entscheidung für knapp').selectOption('skip')
+  // The prompt that stays names the keyword that goes, and the screen says so.
+  await expect(page.locator('[data-test="still-used"]')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Einspielen', exact: true }).click()
+  await expect(page.getByText('1 angelegt, 0 überschrieben, 1 übersprungen.')).toBeVisible()
+  await expect(page.getByText('Übersprungene Keywords: knapp')).toBeVisible()
+
+  await goTo(page, 'Bibliothek')
+  await page.getByRole('searchbox').fill('Weglassen')
+  await expect(page.getByRole('button', { name: /Weglassen öffnen/ })).toHaveCount(0)
+  await page.getByRole('searchbox').fill('Behalten')
+  await expect(page.getByRole('button', { name: /Behalten öffnen/ })).toBeVisible()
+
+  await removeWorkspace(page, 'Auswahlraum')
 })
 
 // FA-802 and the reason W-8 exists at all: an import that silently overwrites

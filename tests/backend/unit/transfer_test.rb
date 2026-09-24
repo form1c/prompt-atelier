@@ -817,6 +817,174 @@ class TransferTest < PromptAtelier::TestCase
     db[:workspaces].insert(name: name, slug: T.slug_for(name), created_at: now, updated_at: now)
   end
 
+  # TF-343b: the refusal of a newer file names the versions this instance
+  # reads, in every language. The German text still said "Fassung 1" long
+  # after version 2 had arrived, while the other four named both. The versions
+  # live here and the sentence lives in the interface tables, so only a check
+  # across both can see them drift apart.
+  def test_the_refusal_names_every_readable_version_in_every_language
+    locales = Dir[File.expand_path('../../../frontend/src/locales/*.json', __dir__)]
+    assert_equal 5, locales.size, 'the check has to find the tables at all'
+
+    locales.each do |file|
+      sentence = JSON.parse(File.read(file)).dig('server', 'unsupported_version')
+      T::READABLE_VERSIONS.each do |version|
+        assert_match(/\b#{version}\b/, sentence, "#{File.basename(file)} leaves out version #{version}")
+      end
+    end
+  end
+
+  # --- TF-347h to TF-347l: deciding the new entries too ---------------------
+  #
+  # Asked for by users. A backup brings a whole workspace along, and whoever
+  # wanted three prompts out of it could only take all of them. The file below
+  # has two new prompts, one of them using a new keyword.
+
+  def two_new_prompts_and_a_keyword
+    T.parse(JSON.generate({
+      'format' => T::FORMAT, 'version' => 2,
+      'prompts' => [
+        { 'title' => 'Erster Neuer', 'body' => 'Fasse zusammen.', 'default_keywords' => ['knapp'] },
+        { 'title' => 'Zweiter Neuer', 'body' => 'Schreibe einen Gruss.' }
+      ],
+      'keywords' => [{ 'name' => 'knapp', 'description' => '', 'text' => 'Sei knapp.',
+                       'position' => 'append', 'sort_order' => 0 }]
+    }))
+  end
+
+  # TF-347h
+  def test_a_new_prompt_offers_create_and_skip
+    with_instance do |db, ids|
+      plan = T.preview(db, workspace_id: ids[:workspaces][:marketing],
+                           package: two_new_prompts_and_a_keyword)
+
+      assert_equal %w[create skip], plan['prompts'].fetch(0)['decisions']
+      assert_equal 'new', plan['prompts'].fetch(0)['state']
+    end
+  end
+
+  # TF-347h
+  def test_a_new_prompt_can_be_left_behind
+    with_instance do |db, ids|
+      workspace = ids[:workspaces][:marketing]
+      report = T.import(db, workspace_id: workspace, owner_id: ids[:users][:sabine],
+                            package: two_new_prompts_and_a_keyword,
+                            decisions: { '0' => 'skip' })
+
+      assert_equal ['Erster Neuer'], report['skipped'], 'what is left behind is named'
+      assert_equal ['Zweiter Neuer'], report['created']
+      assert_nil db[:prompts][workspace_id: workspace, title: 'Erster Neuer']
+      refute_nil db[:prompts][workspace_id: workspace, title: 'Zweiter Neuer']
+    end
+  end
+
+  # The compatibility case. A caller that sends no decision for a new entry,
+  # the command line import among them, gets what every import did before.
+  # TF-347i
+  def test_without_a_decision_new_prompts_and_keywords_are_created
+    with_instance do |db, ids|
+      workspace = ids[:workspaces][:marketing]
+      report = T.import(db, workspace_id: workspace, owner_id: ids[:users][:sabine],
+                            package: two_new_prompts_and_a_keyword)
+
+      assert_equal ['Erster Neuer', 'Zweiter Neuer'], report['created']
+      assert_equal ['knapp'], report['keywords_created']
+      assert_empty report['keywords_skipped']
+    end
+  end
+
+  # TF-347j
+  def test_a_new_keyword_can_be_left_behind
+    with_instance do |db, ids|
+      workspace = ids[:workspaces][:marketing]
+      report = T.import(db, workspace_id: workspace, owner_id: ids[:users][:sabine],
+                            package: two_new_prompts_and_a_keyword,
+                            keyword_decisions: { '0' => 'skip' })
+
+      assert_equal ['knapp'], report['keywords_skipped']
+      assert_empty report['keywords_created']
+      assert_nil db[:keywords][workspace_id: workspace, name: 'knapp']
+      # The consequence the preview warns about: the prompt came in without
+      # the keyword it names.
+      prompt = db[:prompts][workspace_id: workspace, title: 'Erster Neuer']
+      assert_empty db[:prompt_keywords].where(prompt_id: prompt[:id]).all
+    end
+  end
+
+  # TF-347k
+  def test_the_preview_names_the_prompts_that_use_a_new_keyword
+    with_instance do |db, ids|
+      plan = T.preview(db, workspace_id: ids[:workspaces][:marketing],
+                           package: two_new_prompts_and_a_keyword)
+
+      addition = plan['keywords']['additions'].fetch(0)
+      assert_equal 'knapp', addition['name']
+      assert_equal 0, addition['index']
+      assert_equal %w[create skip], addition['decisions']
+      assert_equal [0], addition['used_by'], 'the first prompt uses it, the second does not'
+    end
+  end
+
+  # The counter-check: a keyword that exists here is a collision and stays
+  # out of the additions. Listed in both it could be decided twice.
+  # TF-347k
+  def test_a_keyword_that_exists_here_is_not_an_addition
+    with_instance do |db, ids|
+      workspace = ids[:workspaces][:marketing]
+      C.create_keyword(db, workspace, { 'name' => 'formal', 'description' => 'Sachlicher Ton',
+                                        'text' => 'Schreibe sachlich.', 'position' => 'append',
+                                        'sort_order' => 10 })
+      plan = T.preview(db, workspace_id: workspace, package: incoming_formal('Sei knapp.'))
+
+      assert_empty plan['keywords']['additions']
+      assert_equal 1, plan['keywords']['conflicts'].size
+    end
+  end
+
+  # TF-347l: each side refuses what belongs to the other, and nothing is
+  # written when it does.
+  def test_a_new_prompt_refuses_overwrite
+    with_instance do |db, ids|
+      workspace = ids[:workspaces][:marketing]
+      refused = assert_raises(T::Refused) do
+        T.import(db, workspace_id: workspace, owner_id: ids[:users][:sabine],
+                     package: two_new_prompts_and_a_keyword, decisions: { '0' => 'overwrite' })
+      end
+
+      assert_equal :decision_not_available, refused.code
+      assert_nil db[:keywords][workspace_id: workspace, name: 'knapp'], 'nothing is written'
+    end
+  end
+
+  # TF-347l
+  def test_a_new_keyword_refuses_overwrite
+    with_instance do |db, ids|
+      workspace = ids[:workspaces][:marketing]
+      refused = assert_raises(T::Refused) do
+        T.import(db, workspace_id: workspace, owner_id: ids[:users][:sabine],
+                     package: two_new_prompts_and_a_keyword, keyword_decisions: { '0' => 'overwrite' })
+      end
+
+      assert_equal :decision_not_available, refused.code
+      assert_nil db[:prompts][workspace_id: workspace, title: 'Zweiter Neuer'], 'nothing is written'
+    end
+  end
+
+  # TF-347l
+  def test_a_collision_refuses_create
+    with_instance do |db, ids|
+      marketing, = furnish(db, ids)
+      refused = assert_raises(T::Refused) do
+        T.import(db, workspace_id: marketing, owner_id: ids[:users][:sabine],
+                     package: T.parse(JSON.generate(one_prompt('Reisebericht'))),
+                     decisions: { '0' => 'create' })
+      end
+
+      assert_equal :decision_not_available, refused.code
+      assert_equal 1, db[:prompts].where(workspace_id: marketing, title: 'Reisebericht').count
+    end
+  end
+
   def incoming_formal(text)
     T.parse(JSON.generate({
       'format' => T::FORMAT, 'version' => 2, 'prompts' => [],

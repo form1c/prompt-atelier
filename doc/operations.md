@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Version** | 2.2 |
-| **Date** | 2026-09-03 |
-| **Describes** | Prompt Atelier 1.0.1 |
+| **Version** | 2.3 |
+| **Date** | 2026-09-24 |
+| **Describes** | Prompt Atelier 1.1.0 |
 | **Audience** | Operators during day-to-day operation |
 | **Not covered** | The complete set-up path. See `installation.md`. Working on the source. See `development.md` |
 
@@ -34,7 +34,10 @@ This manual is a reference. It describes every setting, every script and every m
 | `data/` | Database, backups, logs | left unchanged |
 | `scripts/` | Operating scripts | replaced |
 | `doc/` | Installation guide, operations manual, developer manual, and under `doc/examples/` the reverse proxy templates | replaced |
-| `README.md`, `LICENSE` | Overview and license text | replaced |
+| `examples/` | The example package offered on first start | replaced |
+| `img/` | Screenshots shown in the README | replaced |
+| `README.md`, `README.de.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE.md` | Overview, change log, notes for contributors, security policy, license text | replaced |
+| `VERSION` | Version, build date and commit of the release | replaced |
 | `tools/` | Helper programs, on Windows `nssm.exe` | left unchanged |
 
 All paths are resolved relative to the installation directory. The directory can be moved.
@@ -313,7 +316,7 @@ Trash, revisions, the audit log and recorded sign-in attempts are cleaned up aut
 
 1. Create a backup: `scripts/backup.sh`
 2. Stop the service
-3. Replace everything listed as "replaced" in chapter 1: `app/`, `scripts/`, `doc/`, `README.md` and `LICENSE`
+3. Replace everything except `config/`, `data/` and `tools/` with the new release. Chapter 1 lists what that is
 4. Update the schema: `scripts/migrate.sh`
 5. Start the service
 6. Query the health endpoint `/health`

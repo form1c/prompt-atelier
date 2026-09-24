@@ -73,6 +73,13 @@ module PromptAtelier
     # that title: there would be no way to say *which* one.
     DECISIONS = %w[skip copy overwrite].freeze
 
+    # What an entry that does not exist here yet may be answered with, prompt
+    # or keyword alike. Asked for by users: a backup of a whole workspace
+    # brings everything along, and whoever wants three prompts out of it had
+    # no way to leave the rest behind. `create` is the default, so a caller
+    # that sends no decision gets what every import did before.
+    NEW_DECISIONS = %w[create skip].freeze
+
     # A keyword collides on its **name**, and the name is not a label the way
     # a prompt title is: `prompt_keywords` resolves the `default_keywords` of
     # an imported prompt through it, and the schema holds it unique per
@@ -397,7 +404,7 @@ module PromptAtelier
       # candidates with their change dates instead, so the decision can be made
       # by hand afterwards.
       def allowed_decisions(matches)
-        return [] if matches.empty?
+        return NEW_DECISIONS if matches.empty?
 
         matches.size == 1 ? DECISIONS : DECISIONS - ['overwrite']
       end
@@ -415,8 +422,30 @@ module PromptAtelier
         {
           'to_create' => (provided - here.keys).sort,
           'missing' => (needed - here.keys - provided).sort,
+          'additions' => keyword_additions(package, here),
           'conflicts' => keyword_conflicts(package, here)
         }
+      end
+
+      # The keywords of the file that do not exist here, each with a decision
+      # like a new prompt. `used_by` names the prompts of the file that point
+      # at it, by their position: a keyword that is skipped while a prompt
+      # using it is created leaves that prompt without it, because a name
+      # without a keyword behind it is dropped on the way in. Whether that
+      # happens depends on the prompt decisions, which are made on the screen,
+      # so the screen gets the positions and counts for itself.
+      def keyword_additions(package, here)
+        package['keywords'].each_with_index.filter_map do |entry, index|
+          name = entry['name'].to_s.strip
+          next if here.key?(name)
+
+          used_by = package['prompts'].each_with_index.filter_map do |prompt, position|
+            position if Array(prompt['default_keywords']).any? { |value| value.to_s.strip == name }
+          end
+
+          { 'index' => index, 'name' => name, 'decisions' => NEW_DECISIONS,
+            'text' => entry['text'], 'used_by' => used_by }
+        end
       end
 
       # **The case that used to disappear.** A keyword whose name is already
@@ -501,6 +530,11 @@ module PromptAtelier
           if conflict.nil?
             next unless wanted.include?(name)
 
+            if keyword_skipped?(name, decisions[index.to_s] || decisions[index])
+              report['keywords_skipped'] << name
+              next
+            end
+
             Catalog.create_keyword(db, workspace_id, entry, now: now)
             report['keywords_created'] << name
           elsif keyword_overwrite?(conflict, decisions[index.to_s] || decisions[index])
@@ -525,6 +559,15 @@ module PromptAtelier
         decision == 'overwrite'
       end
 
+      # A new keyword: no decision means create, as it always did. Anything
+      # but the two offered is refused, like everywhere else in this file.
+      def keyword_skipped?(name, decision)
+        return false if decision.nil? || decision == 'create'
+        return true if decision == 'skip'
+
+        raise Refused.new(:decision_not_available, { title: name, decision: decision })
+      end
+
       def apply(db, workspace_id, owner_id, source, entry, decision, catalogue, report, now)
         return report['skipped'] << entry['title'] if skipping?(entry, decision)
 
@@ -542,8 +585,13 @@ module PromptAtelier
       # preview did not offer is refused rather than quietly reinterpreted:
       # the caller asked for something specific, and doing something else with
       # their data is worse than refusing.
+      #
+      # A new entry with no decision is created, which is what an import did
+      # before new entries could be decided at all. The two defaults differ on
+      # purpose: leaving out a collision must never destroy anything, and
+      # leaving out a new entry must not quietly lose it.
       def skipping?(entry, decision)
-        return false if entry['state'] == 'new'
+        return false if entry['state'] == 'new' && decision.nil?
         return true if decision.nil? || decision == 'skip'
 
         raise Refused.new(:decision_not_available, { title: entry['title'], decision: decision }) \

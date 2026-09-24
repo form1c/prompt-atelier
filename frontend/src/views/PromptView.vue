@@ -20,6 +20,7 @@ import KeywordChips from '@/components/KeywordChips.vue'
 import LoadingState from '@/components/LoadingState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import Icon from '@/components/Icon.vue'
+import ManualCopy from '@/components/ManualCopy.vue'
 
 // S2 — the prompt in use (Requirements 11.4), and the most important screen
 // in the application.
@@ -537,11 +538,12 @@ const has = (name) => router.hasRoute(name)
 
           <!-- TF-416: the browser refused the clipboard. Selecting and
                copying is something no setting can take away. -->
-          <div v-if="manual !== null" class="prompt__manual">
-            <h3>{{ t('prompt.copy_manual_title') }}</h3>
-            <p>{{ t('prompt.copy_manual_hint') }}</p>
-            <textarea ref="manualField" readonly rows="6" :value="manual" />
-          </div>
+          <ManualCopy
+            v-if="manual !== null"
+            ref="manualField"
+            :text="manual"
+            :hint="t('prompt.copy_manual_hint')"
+          />
         </section>
       </div>
 
@@ -827,14 +829,23 @@ const has = (name) => router.hasRoute(name)
   font-size: 0.875rem;
 }
 
+/* The copy bar stays in sight while the preview is, at every width. A long
+   prompt otherwise put both buttons below the fold, and whoever had read to
+   the end found them there while whoever had not had to go looking. Sticky
+   rather than fixed: it keeps to its column, so scrolling on into the
+   workbench takes it away with the preview it belongs to. The background is
+   the page's own, because the text of the preview runs underneath it. */
 .prompt__footer {
+  position: sticky;
+  bottom: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
   margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  padding: 0.75rem 0;
   border-top: 1px solid var(--border);
+  background: var(--surface-sunken);
 }
 
 .prompt__counts {
@@ -864,32 +875,16 @@ const has = (name) => router.hasRoute(name)
   font-weight: 400;
 }
 
-.prompt__manual {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  border: 1px solid var(--danger);
-  border-radius: var(--radius);
-  background: var(--danger-surface);
-}
-
-.prompt__manual h3 { font-size: 1rem; }
-
-.prompt__manual textarea {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  font: inherit;
-}
-
-/* 11.4: below the two-column threshold the columns stack, and the copy bar
-   stays reachable at the bottom of the screen. */
+/* 11.4: below the two-column threshold the columns stack. The copy bar is
+   sticky at every width, see above. */
 @media (max-width: 899px) {
   .prompt__columns { grid-template-columns: minmax(0, 1fr); }
 
+  /* Full width on a narrow screen, so the bar reads as the bottom of the
+     screen rather than of a column. The shadow only here: on a wide screen
+     it drew a frame around the bar even where it stands at rest below the
+     preview, and the border line already separates it from the text. */
   .prompt__footer {
-    position: sticky;
-    bottom: 0;
     margin: 0 -1rem;
     padding: 0.75rem 1rem;
     background: var(--surface);

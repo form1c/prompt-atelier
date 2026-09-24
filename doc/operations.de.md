@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Fassung** | 2.2 |
-| **Stand** | 2026-09-03 |
-| **Beschreibt** | Prompt Atelier 1.0.1 |
+| **Fassung** | 2.3 |
+| **Stand** | 2026-09-24 |
+| **Beschreibt** | Prompt Atelier 1.1.0 |
 | **Zielgruppe** | Betreiber im laufenden Betrieb |
 | **Nicht enthalten** | Der durchgehende Einrichtungsweg. Siehe `installation.de.md`. Arbeit am Quelltext. Siehe `development.de.md` |
 
@@ -34,7 +34,10 @@ Dieses Handbuch ist ein Nachschlagewerk. Es beschreibt jede Einstellung, jedes S
 | `data/` | Datenbank, Sicherungen, Protokolle | bleibt unverändert |
 | `scripts/` | Betriebsskripte | wird ersetzt |
 | `doc/` | Anleitung, Betriebshandbuch, Entwicklerhandbuch sowie unter `doc/examples/` die Vorlagen für Reverse-Proxy-Konfigurationen | wird ersetzt |
-| `README.md`, `LICENSE` | Kurzüberblick und Lizenztext | werden ersetzt |
+| `examples/` | Das Beispielpaket, das beim ersten Start angeboten wird | wird ersetzt |
+| `img/` | Bildschirmfotos der README | wird ersetzt |
+| `README.md`, `README.de.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE.md` | Kurzüberblick, Änderungsprotokoll, Hinweise für Beitragende, Sicherheitsrichtlinie, Lizenztext | werden ersetzt |
+| `VERSION` | Fassung, Bauzeitpunkt und Commit der Auslieferung | wird ersetzt |
 | `tools/` | Hilfsprogramme, unter Windows `nssm.exe` | bleibt unverändert |
 
 Alle Pfade werden relativ zum Installationsverzeichnis aufgelöst. Das Verzeichnis kann verschoben werden.
@@ -313,7 +316,7 @@ Papierkorb, Revisionen, Prüfprotokoll und protokollierte Anmeldeversuche werden
 
 1. Sicherung erzeugen: `scripts/backup.sh`
 2. Dienst beenden
-3. Alles ersetzen, was in Kapitel 1 als „wird ersetzt“ geführt ist: `app/`, `scripts/`, `doc/`, `README.md` und `LICENSE`
+3. Alles außer `config/`, `data/` und `tools/` durch die neue Fassung ersetzen. Was das ist, führt Kapitel 1 auf
 4. Schema aktualisieren: `scripts/migrate.sh`
 5. Dienst starten
 6. Zustandsendpunkt `/health` abfragen

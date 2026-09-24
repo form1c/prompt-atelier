@@ -748,7 +748,8 @@ module PromptAtelier
                    meta: { created: report['created'].size, overwritten: report['overwritten'].size,
                            skipped: report['skipped'].size,
                            keywords_created: report['keywords_created'].size,
-                           keywords_overwritten: report['keywords_overwritten'].size })
+                           keywords_overwritten: report['keywords_overwritten'].size,
+                           keywords_skipped: report['keywords_skipped'].size })
 
       json_response(200, report: report)
     end

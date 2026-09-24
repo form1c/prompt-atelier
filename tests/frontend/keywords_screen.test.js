@@ -72,6 +72,17 @@ describe('The list', () => {
     expect(text).toContain('After the prompt')
   })
 
+  // The counter-check to the empty stock below. The empty state once stood
+  // under every filled list as well, because an element placed between the
+  // list and the empty state took over its `v-else`. The case for an empty
+  // stock stayed green all the while.
+  it('shows no empty state while there are keywords', async () => {
+    const { wrapper } = await screen()
+
+    expect(wrapper.text()).toContain('formal')
+    expect(wrapper.text()).not.toContain('No keywords yet')
+  })
+
   it('asks for the chosen workspace', async () => {
     const { server } = await screen()
 
@@ -340,5 +351,83 @@ describe('Whoever may not write', () => {
     expect(wrapper.text()).toContain('formal')
     expect(wrapper.find('[data-test="save-keyword"]').exists()).toBe(false)
     expect(buttonNamed(wrapper, 'Delete')).toBeUndefined()
+  })
+})
+
+// TF-367: the text of a keyword is copied from the list, without the detour
+// through the form. The detour was not only slow: whoever may not write had
+// no way to the text at all, because the list does not show it and the form
+// is closed to them.
+describe('Copying the text (TF-367)', () => {
+  const clipboard = () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    return writeText
+  }
+  const copyButtons = (wrapper) => wrapper.findAll('[data-test="copy-keyword"]')
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('puts the text of the keyword into the clipboard, not its name or description', async () => {
+    const writeText = clipboard()
+    const { wrapper } = await screen()
+
+    await copyButtons(wrapper)[0].trigger('click')
+    await settle()
+
+    expect(writeText).toHaveBeenCalledWith('Antworte in förmlichem Deutsch.')
+    expect(wrapper.find('.notices__item').text()).toContain('formal')
+  })
+
+  // Two rows, the second one clicked: a handler bound to the wrong entry
+  // would copy the first text and still look right in a list of one.
+  it('copies the keyword of the row that was clicked', async () => {
+    const writeText = clipboard()
+    const { wrapper } = await screen({
+      keywords: [keywordRow(), keywordRow({ id: 4, name: 'kurz', text: 'Fasse dich kurz.' })]
+    })
+
+    await copyButtons(wrapper)[1].trigger('click')
+    await settle()
+
+    expect(writeText).toHaveBeenCalledWith('Fasse dich kurz.')
+  })
+
+  // Copying is reading. The counter-check to the case above it: editing and
+  // deleting stay hidden for the same person.
+  it('is offered to whoever may only read', async () => {
+    const writeText = clipboard()
+    const { wrapper } = await screen({ workspaces: { ...WORKSPACES, selected_workspace_id: 11 } })
+
+    expect(buttonNamed(wrapper, 'Edit')).toBeUndefined()
+    await copyButtons(wrapper)[0].trigger('click')
+    await settle()
+
+    expect(writeText).toHaveBeenCalledWith('Antworte in förmlichem Deutsch.')
+  })
+
+  // TF-416 on this screen: the browser refuses, and the text has to end up
+  // where it can be selected. Both ways a refusal happens are checked.
+  it('offers the text for selecting when the clipboard refuses', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('nope')) } })
+    const { wrapper } = await screen()
+
+    await copyButtons(wrapper)[0].trigger('click')
+    await settle()
+
+    const fallback = wrapper.find('textarea[readonly]')
+    expect(fallback.element.value).toBe('Antworte in förmlichem Deutsch.')
+    expect(wrapper.text()).toContain('The text of “formal” is here')
+    expect(wrapper.find('.notices__item').exists()).toBe(false)
+  })
+
+  it('offers the text for selecting when there is no clipboard at all', async () => {
+    vi.stubGlobal('navigator', {})
+    const { wrapper } = await screen()
+
+    await copyButtons(wrapper)[0].trigger('click')
+    await settle()
+
+    expect(wrapper.find('textarea[readonly]').element.value).toBe('Antworte in förmlichem Deutsch.')
   })
 })

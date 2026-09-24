@@ -5,12 +5,14 @@ import { get, post, put, del as remove, ApiError } from '@/api/client'
 import { session, selectedWorkspace } from '@/state/session'
 import { notify } from '@/state/notices'
 import { effectParts, POSITIONS } from '@/util/keyword'
+import { copyText } from '@/util/clipboard'
 import AppShell from '@/components/AppShell.vue'
 import LoadingState from '@/components/LoadingState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import Icon from '@/components/Icon.vue'
+import ManualCopy from '@/components/ManualCopy.vue'
 
 // S4 — the keywords of a workspace (FA-401 to FA-404, W-4).
 //
@@ -42,6 +44,10 @@ const doomed = ref(null)
 
 const nameField = useTemplateRef('nameField')
 
+// The keyword whose text the browser refused to take, as { name, text }.
+const manual = ref(null)
+const manualField = useTemplateRef('manualField')
+
 const workspace = computed(() => selectedWorkspace())
 const mayWrite = computed(() => workspace.value?.permissions?.keywords === true)
 
@@ -71,6 +77,7 @@ async function load () {
 
   loading.value = true
   failure.value = null
+  manual.value = null
 
   try {
     const payload = await get('/keywords', { params: { workspace_id: session.selectedWorkspaceId } })
@@ -184,6 +191,21 @@ async function afterDelete (keyword) {
   await load()
 }
 
+// Copying is reading, so it is offered to everyone who sees the list, not
+// only to those who may write. Without it a `viewer` had no way to the text
+// at all: the list does not show it, and the form is closed to them.
+async function copyKeyword (keyword) {
+  if (await copyText(keyword.text)) {
+    manual.value = null
+    notify(t('keywords.copied', { name: keyword.name }))
+    return
+  }
+
+  manual.value = { name: keyword.name, text: keyword.text }
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  manualField.value?.select()
+}
+
 const positionLabel = (value) => (
   value === 'append' ? t('keywords.position_append') : t('keywords.position_prepend')
 )
@@ -211,23 +233,34 @@ const positionLabel = (value) => (
               <template v-if="keyword.description"> · {{ keyword.description }}</template>
             </span>
 
-            <span v-if="mayWrite" class="entry__actions">
+            <span class="entry__actions">
               <button
                 type="button"
                 class="button button--quiet"
-                :aria-label="t('keywords.edit_one', { name: keyword.name })"
-                @click="edit(keyword)"
+                :aria-label="t('keywords.copy_one', { name: keyword.name })"
+                data-test="copy-keyword"
+                @click="copyKeyword(keyword)"
               >
-                <Icon name="pencil" /> {{ t('keywords.edit') }}
+                <Icon name="clipboard" /> {{ t('keywords.copy') }}
               </button>
-              <button
-                type="button"
-                class="button button--quiet"
-                :aria-label="t('keywords.delete_one', { name: keyword.name })"
-                @click="askDelete(keyword)"
-              >
-                <Icon name="trash" /> {{ t('keywords.delete') }}
-              </button>
+              <template v-if="mayWrite">
+                <button
+                  type="button"
+                  class="button button--quiet"
+                  :aria-label="t('keywords.edit_one', { name: keyword.name })"
+                  @click="edit(keyword)"
+                >
+                  <Icon name="pencil" /> {{ t('keywords.edit') }}
+                </button>
+                <button
+                  type="button"
+                  class="button button--quiet"
+                  :aria-label="t('keywords.delete_one', { name: keyword.name })"
+                  @click="askDelete(keyword)"
+                >
+                  <Icon name="trash" /> {{ t('keywords.delete') }}
+                </button>
+              </template>
             </span>
           </li>
         </ul>
@@ -243,6 +276,17 @@ const positionLabel = (value) => (
             {{ t('keywords.empty_create') }}
           </button>
         </EmptyState>
+
+        <!-- After the empty state, never between it and the list: its
+             `v-else` belongs to the list, and anything with a `v-if` placed
+             in between takes the `v-else` over. That happened once, and the
+             empty state stood below every list. -->
+        <ManualCopy
+          v-if="manual !== null"
+          ref="manualField"
+          :text="manual.text"
+          :hint="t('keywords.copy_manual_hint', { name: manual.name })"
+        />
       </section>
 
       <div v-if="mayWrite" class="keywords__editor">

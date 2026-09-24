@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Fassung** | 1.3 |
-| **Stand** | 2026-09-03 |
-| **Beschreibt** | Prompt Atelier 1.0.1 |
+| **Fassung** | 1.4 |
+| **Stand** | 2026-09-24 |
+| **Beschreibt** | Prompt Atelier 1.1.0 |
 | **Zielgruppe** | Betreiber bei Einrichtung und Betrieb einer Installation |
 | **Nicht enthalten** | Arbeit am Quelltext. Siehe `development.de.md` |
 
@@ -50,8 +50,8 @@ Das Skript legt eine eigene Testinstallation mit eigenem Verzeichnis, eigener Da
 Veröffentlicht wird je Fassung ein plattformunabhängiges Archiv, als `.tar.gz` und als `.zip`:
 
 ```
-promptatelier-1.0.1-universal.tar.gz
-promptatelier-1.0.1-universal.zip
+promptatelier-1.1.0-universal.tar.gz
+promptatelier-1.1.0-universal.zip
 ```
 
 Es enthält die Anwendung mit fertig gebauter Oberfläche, jedoch **keine Ruby-Bibliotheken**. Diese bezieht das Installationsskript beim ersten Lauf aus dem Internet, anhand der mitgelieferten Sperrdatei `Gemfile.lock`.
@@ -112,15 +112,15 @@ Ein Archiv einschließlich der Bibliotheken lässt sich selbst erzeugen. Dafür 
 
 Das erzeugte Archiv enthält die Bibliotheken und benötigt auf der Zielmaschine keinen Internetzugang. **Konfiguration und Daten der Ausgangsinstallation werden nicht übernommen.** Die Zielmaschine fragt bei der Installation nach einem eigenen Verwaltungskonto.
 
-Der Name des erzeugten Archivs nennt Plattform und Ruby-Reihe, etwa `promptatelier-1.0.1-x86_64-linux-gnu-ruby3.3.0.tar.gz`. Es ist ausschließlich für Maschinen dieser Art verwendbar.
+Der Name des erzeugten Archivs nennt Plattform und Ruby-Reihe, etwa `promptatelier-1.1.0-x86_64-linux-gnu-ruby3.3.0.tar.gz`. Es ist ausschließlich für Maschinen dieser Art verwendbar.
 
 ---
 
 ## 2. Installation
 
 ```bash
-tar -xzf promptatelier-1.0.1-universal.tar.gz     # Linux
-cd promptatelier-1.0.1-universal
+tar -xzf promptatelier-1.1.0-universal.tar.gz     # Linux
+cd promptatelier-1.1.0-universal
 scripts/install.sh
 ```
 
@@ -341,12 +341,12 @@ Nach einer Wiederherstellung sind alle Benutzer abgemeldet. Sitzungen werden in 
 
 1. Sicherung erzeugen: `scripts/backup.sh`
 2. Dienst beenden
-3. Die Verzeichnisse `app/`, `scripts/` und `doc/` sowie `README.md` und `LICENSE` durch die neue Fassung ersetzen
+3. Alles außer `config/`, `data/` und `tools/` durch die neue Fassung ersetzen
 4. Schema aktualisieren: `scripts/migrate.sh`
 5. Dienst starten
 6. Zustandsendpunkt `/health` abfragen
 
-Die Verzeichnisse `config/` und `data/` bleiben dabei unverändert.
+Die Verzeichnisse `config/`, `data/` und `tools/` bleiben dabei unverändert. In `tools/` liegt unter Windows die `nssm.exe`, die nicht zur Auslieferung gehört. Was ersetzt wird, führt das Betriebshandbuch in Kapitel 1 auf.
 
 `migrate` erzeugt vor jedem Schemaschritt selbsttätig eine Sicherung. Der Aufruf `scripts/migrate.sh --status` gibt die ausstehenden Schritte aus, ohne Änderungen vorzunehmen.
 

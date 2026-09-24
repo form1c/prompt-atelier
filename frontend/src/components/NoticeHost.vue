@@ -18,10 +18,13 @@ import { notices } from '@/state/notices'
 </template>
 
 <style scoped>
+/* Top right, just below the header. It used to be the bottom corner, which
+   is where the copy bar of the prompt screen stands: the confirmation of a
+   copy covered the very button that had just been pressed. */
 .notices {
   position: fixed;
+  top: 4.5rem;
   right: 1rem;
-  bottom: 1rem;
   z-index: 20;
   display: flex;
   flex-direction: column;

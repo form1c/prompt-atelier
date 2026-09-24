@@ -206,3 +206,74 @@ test('moves a prompt and resets its visibility on the way', async ({ page }) => 
   await page.getByRole('button', { name: /^Persönlicher Workspace/ }).click()
   await expect(page.getByRole('heading', { name: 'Noch keine Prompts' })).toBeVisible()
 })
+
+// TF-368, reported by users: with a long prompt both copy buttons sat below
+// the fold, under the end of the preview. They now stay in sight while the
+// preview is, on a wide screen as they already did on a narrow one.
+//
+// Only a browser can say what is in sight, so this lives here and not in a
+// unit test. The prompt is created by the case itself, like everything this
+// file writes.
+test('keeps the copy buttons in sight beside a long preview', async ({ page }) => {
+  await signIn(page)
+
+  await page.getByRole('link', { name: 'Neu' }).click()
+  await page.getByLabel('Titel', { exact: true }).fill('Langer Prompt für die Kopierleiste')
+  const body = Array.from({ length: 120 }, (_, index) => `Zeile ${index + 1} eines langen Prompts.`)
+  await page.getByLabel('Prompt-Text', { exact: true }).fill(body.join('\n'))
+  await page.getByRole('button', { name: /Speichern/ }).click()
+  await expect(page.getByRole('heading', { name: 'Langer Prompt für die Kopierleiste' })).toBeVisible()
+
+  const copy = page.locator('[data-test="copy"]')
+  const copyRaw = page.locator('[data-test="copy-raw"]')
+
+  // The premise, checked rather than assumed: the preview really does reach
+  // past the bottom of the window. Without it the case below is trivially
+  // green.
+  const previewBox = await preview(page).boundingBox()
+  expect(previewBox.y + previewBox.height).toBeGreaterThan(page.viewportSize().height)
+
+  // Just opened, reading from the top.
+  await expect(copy).toBeInViewport()
+  await expect(copyRaw).toBeInViewport()
+
+  // Reading on, somewhere in the middle of the text.
+  await preview(page).hover()
+  await page.mouse.wheel(0, 800)
+  await expect(copy).toBeInViewport()
+
+  // On into the workbench: the bar stays with its column and does not lie
+  // over the field below it.
+  const workbench = page.locator('[data-test="workbench"]')
+  await workbench.scrollIntoViewIfNeeded()
+  const bar = await copy.boundingBox()
+  const field = await workbench.boundingBox()
+  expect(bar.y + bar.height).toBeLessThanOrEqual(field.y)
+})
+
+// TF-369: the confirmation of a copy must not lie over the button that was
+// just pressed. Notices used to appear in the bottom corner, which is where
+// the copy bar stands since TF-368.
+test('shows the copy confirmation clear of the copy bar', async ({ page }) => {
+  await signIn(page)
+
+  await page.getByRole('link', { name: 'Neu' }).click()
+  await page.getByLabel('Titel', { exact: true }).fill('Langer Prompt für die Bestätigung')
+  const body = Array.from({ length: 120 }, (_, index) => `Zeile ${index + 1} eines langen Prompts.`)
+  await page.getByLabel('Prompt-Text', { exact: true }).fill(body.join('\n'))
+  await page.getByRole('button', { name: /Speichern/ }).click()
+  await expect(page.getByRole('heading', { name: 'Langer Prompt für die Bestätigung' })).toBeVisible()
+  // The notice of the save would stand in for the one this case is about.
+  await expect(page.locator('.notices__item')).toHaveCount(0, { timeout: 10_000 })
+
+  const copy = page.locator('[data-test="copy"]')
+  await copy.click()
+  const notice = page.locator('.notices__item')
+  await expect(notice).toBeVisible()
+
+  const button = await copy.boundingBox()
+  const box = await notice.boundingBox()
+  const apart = box.x + box.width <= button.x || button.x + button.width <= box.x ||
+    box.y + box.height <= button.y || button.y + button.height <= box.y
+  expect(apart).toBe(true)
+})

@@ -271,3 +271,39 @@ describe('No display text in the code', () => {
     expect(textNodes(templateOf(sample))).toEqual([])
   })
 })
+
+// TF-713, German spelling: umlauts are written as umlauts. Eleven server and
+// field messages carried "spaeter", "gueltig", "Passwoerter" and the like
+// since the first release, most likely taken over from a table that had to
+// avoid them. Nothing noticed, because every check here asks whether a text
+// exists, never how it is spelt.
+//
+// A dictionary would be the thorough answer and is not available on every
+// build machine. So every word with "ae", "oe" or "ue" has to be on this list.
+// A new one fails here and has to be looked at once, which is the point.
+describe('German spelling', () => {
+  const REAL_WORDS = new Set([
+    'aktuelle', 'dauer', 'dauerhafte', 'gesteuert', 'neue', 'neuen', 'neuer', 'neues', 'zuerst'
+  ])
+  const table = JSON.parse(readFileSync(path.resolve(SOURCE, 'locales', 'de.json'), 'utf8'))
+
+  function suspects (value, found = []) {
+    if (typeof value === 'string') {
+      for (const word of value.match(/[A-Za-zÄÖÜäöüß]+/g) ?? []) {
+        if (/ae|oe|ue/i.test(word) && !REAL_WORDS.has(word.toLowerCase())) found.push(word)
+      }
+    } else if (value && typeof value === 'object') {
+      for (const [key, entry] of Object.entries(value)) if (key !== '_note') suspects(entry, found)
+    }
+    return found
+  }
+
+  it('writes umlauts as umlauts', () => {
+    expect(suspects(table)).toEqual([])
+  })
+
+  // The counter-check: the search finds what it is there to find.
+  it('spots a word written without its umlaut', () => {
+    expect(suspects({ rate_limited: 'Bitte spaeter erneut versuchen, neue Anfrage.' })).toEqual(['spaeter'])
+  })
+})

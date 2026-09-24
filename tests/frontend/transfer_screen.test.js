@@ -18,10 +18,10 @@ const realFetch = globalThis.fetch
 
 const previewBody = (overrides = {}) => ({
   preview: {
-    prompts: [{ index: 0, title: 'Ganz neu', state: 'new', decisions: [], candidates: [] }],
+    prompts: [{ index: 0, title: 'Ganz neu', state: 'new', decisions: ['create', 'skip'], candidates: [] }],
     new_count: 1,
     collision_count: 0,
-    keywords: { to_create: [], missing: [], conflicts: [] },
+    keywords: { to_create: [], missing: [], additions: [], conflicts: [] },
     unknown_fields: [],
     ...overrides
   }
@@ -34,6 +34,7 @@ const keywordConflictPreview = previewBody({
   keywords: {
     to_create: [],
     missing: [],
+    additions: [],
     conflicts: [{
       index: 0,
       name: 'formal',
@@ -49,6 +50,7 @@ const identicalKeywordPreview = previewBody({
   keywords: {
     to_create: [],
     missing: [],
+    additions: [],
     conflicts: [{
       index: 0,
       name: 'formal',
@@ -62,7 +64,7 @@ const identicalKeywordPreview = previewBody({
 
 const collidingPreview = previewBody({
   prompts: [
-    { index: 0, title: 'Ganz neu', state: 'new', decisions: [], candidates: [] },
+    { index: 0, title: 'Ganz neu', state: 'new', decisions: ['create', 'skip'], candidates: [] },
     {
       index: 1,
       title: 'Blogartikel-Generator',
@@ -326,7 +328,8 @@ describe('Collisions (FA-802)', () => {
     await wrapper.find('[data-test="import"]').trigger('click')
     await settle()
 
-    expect(JSON.parse(writingCalls(server).at(-1).options.body).decisions).toEqual({ 1: 'skip' })
+    // The new entry goes out on "anlegen", the collision on "überspringen".
+    expect(JSON.parse(writingCalls(server).at(-1).options.body).decisions).toEqual({ 0: 'create', 1: 'skip' })
   })
 
   it('sends the decision that was made', async () => {
@@ -339,11 +342,132 @@ describe('Collisions (FA-802)', () => {
     })
 
     await pick(wrapper, '{}')
-    await wrapper.find('.entry select').setValue('overwrite')
+    await wrapper.find('[data-test="collision"] select').setValue('overwrite')
     await wrapper.find('[data-test="import"]').trigger('click')
     await settle()
 
-    expect(JSON.parse(writingCalls(server).at(-1).options.body).decisions).toEqual({ 1: 'overwrite' })
+    expect(JSON.parse(writingCalls(server).at(-1).options.body).decisions).toEqual({ 0: 'create', 1: 'overwrite' })
+  })
+})
+
+// TF-347m: the new entries can be decided as well. Asked for by users: a
+// backup brings a whole workspace along, and whoever wanted three prompts out
+// of it could only take all of them. Two new prompts, the first using a new
+// keyword, and one collision that must stay out of everything said here.
+const additionsPreview = previewBody({
+  prompts: [
+    { index: 0, title: 'Erster Neuer', state: 'new', decisions: ['create', 'skip'], candidates: [] },
+    { index: 1, title: 'Zweiter Neuer', state: 'new', decisions: ['create', 'skip'], candidates: [] },
+    {
+      index: 2,
+      title: 'Blogartikel-Generator',
+      state: 'collision',
+      decisions: ['skip', 'copy', 'overwrite'],
+      candidates: [{ id: 5, title: 'Blogartikel-Generator', updated_at: '2026-07-01T10:00:00+02:00' }]
+    }
+  ],
+  new_count: 2,
+  collision_count: 1,
+  keywords: {
+    to_create: ['knapp'],
+    missing: [],
+    additions: [{ index: 0, name: 'knapp', decisions: ['create', 'skip'], text: 'Sei knapp.', used_by: [0] }],
+    conflicts: []
+  }
+})
+
+describe('New entries (TF-347m)', () => {
+  async function opened () {
+    const found = await screen({
+      workspaces: ownerWorkspaces(),
+      routes: [
+        { method: 'POST', path: '/import/preview', body: additionsPreview },
+        { method: 'POST', path: '/import', body: { report: report() } }
+      ]
+    })
+    await pick(found.wrapper, '{}')
+    return found
+  }
+
+  const addition = (wrapper, title) =>
+    wrapper.findAll('[data-test="addition"]').find((row) => row.text().includes(title))
+  const importing = async (wrapper, server) => {
+    await wrapper.find('[data-test="import"]').trigger('click')
+    await settle()
+    return JSON.parse(writingCalls(server).at(-1).options.body)
+  }
+
+  it('lists every new prompt and keyword, each on "anlegen"', async () => {
+    const { wrapper, server } = await opened()
+
+    expect(wrapper.findAll('[data-test="addition"]')).toHaveLength(2)
+    expect(wrapper.find('[data-test="keyword-addition"]').text()).toContain('knapp')
+    const body = await importing(wrapper, server)
+    expect(body.decisions).toEqual({ 0: 'create', 1: 'create', 2: 'skip' })
+    expect(body.keyword_decisions).toEqual({ 0: 'create' })
+  })
+
+  it('sends a new prompt that was left behind as skipped', async () => {
+    const { wrapper, server } = await opened()
+
+    await addition(wrapper, 'Zweiter Neuer').find('select').setValue('skip')
+    const body = await importing(wrapper, server)
+
+    expect(body.decisions).toEqual({ 0: 'create', 1: 'skip', 2: 'skip' })
+  })
+
+  it('sends a new keyword that was left behind as skipped', async () => {
+    const { wrapper, server } = await opened()
+
+    await wrapper.find('[data-test="keyword-addition"] select').setValue('skip')
+    const body = await importing(wrapper, server)
+
+    expect(body.keyword_decisions).toEqual({ 0: 'skip' })
+  })
+
+  // Deciding all new ones must leave the collision where it was. A control
+  // that reached into the other list would turn "leave the new ones behind"
+  // into a silent change of what happens to existing prompts.
+  it('decides all new entries at once and leaves the collision alone', async () => {
+    const { wrapper, server } = await opened()
+
+    await wrapper.find('[data-test="collision"] select').setValue('overwrite')
+    await wrapper.find('[data-test="decide-new-skip"]').trigger('click')
+    const body = await importing(wrapper, server)
+
+    expect(body.decisions).toEqual({ 0: 'skip', 1: 'skip', 2: 'overwrite' })
+    expect(body.keyword_decisions).toEqual({ 0: 'skip' })
+  })
+
+  it('counts what is left behind in the line above the button', async () => {
+    const { wrapper } = await opened()
+
+    await addition(wrapper, 'Zweiter Neuer').find('select').setValue('skip')
+
+    // One created, one new left behind plus the collision skipped.
+    expect(wrapper.find('[data-test="import-plan"]').text())
+      .toBe('The import creates 1, overwrites 0, creates 0 as copies and skips 2.')
+  })
+
+  it('warns when a skipped keyword is named by a prompt that is created', async () => {
+    const { wrapper } = await opened()
+
+    expect(wrapper.find('[data-test="still-used"]').exists()).toBe(false)
+    await wrapper.find('[data-test="keyword-addition"] select').setValue('skip')
+
+    expect(wrapper.find('[data-test="still-used"]').text())
+      .toBe('Used by 1 imported prompts. It will be missing there after the import.')
+  })
+
+  // The counter-check: when the prompt that names it is left behind as well,
+  // nothing is lost and nothing is said.
+  it('does not warn when the prompt naming it is left behind too', async () => {
+    const { wrapper } = await opened()
+
+    await wrapper.find('[data-test="keyword-addition"] select').setValue('skip')
+    await addition(wrapper, 'Erster Neuer').find('select').setValue('skip')
+
+    expect(wrapper.find('[data-test="still-used"]').exists()).toBe(false)
   })
 })
 

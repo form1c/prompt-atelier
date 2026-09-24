@@ -41,6 +41,7 @@ const mayImport = computed(() => workspace.value?.permissions?.import === true)
 // `t('…')`, and a key assembled at runtime is a text it reports as unused
 // (TF-713) — the same reason the preview's slot hints are spelled out.
 function decisionLabel (choice) {
+  if (choice === 'create') return t('transfer.decision_create')
   if (choice === 'copy') return t('transfer.decision_copy')
   if (choice === 'overwrite') return t('transfer.decision_overwrite')
 
@@ -57,6 +58,23 @@ const collisions = computed(() => (preview.value?.prompts ?? []).filter((entry) 
 // missing ones, because the file provides it. It fell between them, and the
 // definition in the file was dropped without a word. These are those.
 const keywordConflicts = computed(() => preview.value?.keywords?.conflicts ?? [])
+
+// What the file brings that this workspace does not have yet, prompts and
+// keywords. Asked for by users: a backup brings a whole workspace along, and
+// whoever wanted three prompts out of it could only take all of them. Each
+// entry starts on "anlegen", so a file taken as it is arrives as before.
+const additions = computed(() => (preview.value?.prompts ?? []).filter((entry) => entry.state === 'new'))
+const keywordAdditions = computed(() => preview.value?.keywords?.additions ?? [])
+
+// A skipped new keyword is not merely absent afterwards: a prompt that names
+// it arrives without it, because a name with no keyword behind it is dropped
+// on the way in. Said, not prevented. Leaving the keyword behind can be
+// exactly what somebody wants.
+function stillUsed (keyword) {
+  if (keywordDecisions.value[keyword.index] !== 'skip') return 0
+
+  return keyword.used_by.filter((index) => decisions.value[index] !== 'skip').length
+}
 
 // --- deciding all of them at once (FA-802) ---------------------------------
 //
@@ -88,14 +106,23 @@ function decideAll (choice) {
   if (untouched > 0) notify(t('transfer.decided_partly', { count: untouched }))
 }
 
+// The same for the new entries, prompts and keywords together. Both offer the
+// same two choices, so there is nothing that could be left untouched.
+function decideAllNew (choice) {
+  additions.value.forEach((entry) => { decisions.value[entry.index] = choice })
+  keywordAdditions.value.forEach((entry) => { keywordDecisions.value[entry.index] = choice })
+}
+
 // What will happen, as four numbers. Counted from the decisions in hand rather
 // than from the answer, because these are the decisions the import is about to
-// be sent — the preview's own counts describe the file, not the plan.
+// be sent — the preview's own counts describe the file, not the plan. Since
+// new entries can be left behind, "angelegt" is a decision as well and no
+// longer the number of new entries in the file.
 const plan = computed(() => {
   const chosen = Object.values(decisions.value)
 
   return {
-    added: preview.value?.new_count ?? 0,
+    added: chosen.filter((choice) => choice === 'create').length,
     overwrite: chosen.filter((choice) => choice === 'overwrite').length,
     copy: chosen.filter((choice) => choice === 'copy').length,
     skip: chosen.filter((choice) => choice === 'skip').length
@@ -204,16 +231,17 @@ async function loadPreview () {
     preview.value = payload.preview
     // Every collision starts on "überspringen". The safe answer is the
     // default, and it is the only one that cannot destroy something by
-    // somebody clicking through without reading.
+    // somebody clicking through without reading. A new entry starts on
+    // "anlegen": leaving it out by default would lose it just as quietly.
     decisions.value = Object.fromEntries(
-      payload.preview.prompts.filter((entry) => entry.state !== 'new')
-        .map((entry) => [entry.index, 'skip'])
+      payload.preview.prompts.map((entry) => [entry.index, entry.state === 'new' ? 'create' : 'skip'])
     )
-    // Same default, and here it carries more weight: a keyword has no
-    // revisions behind it, so an overwrite cannot be taken back.
-    keywordDecisions.value = Object.fromEntries(
-      (payload.preview.keywords.conflicts ?? []).map((entry) => [entry.index, 'skip'])
-    )
+    // Same defaults, and for a collision they carry more weight here: a
+    // keyword has no revisions behind it, so an overwrite cannot be taken back.
+    keywordDecisions.value = Object.fromEntries([
+      ...(payload.preview.keywords.additions ?? []).map((entry) => [entry.index, 'create']),
+      ...(payload.preview.keywords.conflicts ?? []).map((entry) => [entry.index, 'skip'])
+    ])
   } catch (problem) {
     if (!(problem instanceof ApiError)) throw problem
 
@@ -312,15 +340,76 @@ async function runImport () {
           {{ t('transfer.counts', { file: fileName, added: preview.new_count, collisions: preview.collision_count }) }}
         </p>
 
-        <p v-if="preview.keywords.to_create.length" class="hint">
-          {{ t('transfer.keywords_new', { names: preview.keywords.to_create.join(', ') }) }}
-        </p>
         <p v-if="preview.keywords.missing.length" class="hint">
           {{ t('transfer.keywords_missing', { names: preview.keywords.missing.join(', ') }) }}
         </p>
         <p v-if="preview.unknown_fields.length" class="hint">
           {{ t('transfer.unknown_fields', { names: preview.unknown_fields.join(', ') }) }}
         </p>
+
+        <!-- The new entries, each with a choice. Keywords first, like below:
+             whether a prompt keeps its keyword depends on them. -->
+        <template v-if="additions.length || keywordAdditions.length">
+          <h3 class="transfer__group">{{ t('transfer.new_prompts') }}</h3>
+
+          <div v-if="additions.length + keywordAdditions.length > 1" class="transfer__all">
+            <span>{{ t('transfer.decide_all_new') }}</span>
+            <button
+              type="button"
+              class="button button--quiet"
+              data-test="decide-new-create"
+              @click="decideAllNew('create')"
+            >
+              {{ t('transfer.decision_create') }}
+            </button>
+            <button
+              type="button"
+              class="button button--quiet"
+              data-test="decide-new-skip"
+              @click="decideAllNew('skip')"
+            >
+              {{ t('transfer.decision_skip') }}
+            </button>
+          </div>
+
+          <ul class="entries" data-test="additions">
+            <li v-for="entry in keywordAdditions" :key="`k${entry.index}`" class="entry" data-test="keyword-addition">
+              <span class="entry__name">{{ entry.name }}</span>
+              <span class="entry__detail">
+                {{ t('keywords.effect_legend_keyword') }}
+                <template v-if="stillUsed(entry) > 0">
+                  · <span class="transfer__warning" data-test="still-used">{{ t('transfer.keyword_still_used', { count: stillUsed(entry) }) }}</span>
+                </template>
+              </span>
+
+              <span class="entry__actions">
+                <label class="transfer__decision">
+                  <span class="visually-hidden">{{ t('transfer.decision_for', { title: entry.name }) }}</span>
+                  <select v-model="keywordDecisions[entry.index]">
+                    <option v-for="choice in entry.decisions" :key="choice" :value="choice">
+                      {{ decisionLabel(choice) }}
+                    </option>
+                  </select>
+                </label>
+              </span>
+            </li>
+
+            <li v-for="entry in additions" :key="`p${entry.index}`" class="entry" data-test="addition">
+              <span class="entry__name">{{ entry.title }}</span>
+
+              <span class="entry__actions">
+                <label class="transfer__decision">
+                  <span class="visually-hidden">{{ t('transfer.decision_for', { title: entry.title }) }}</span>
+                  <select v-model="decisions[entry.index]">
+                    <option v-for="choice in entry.decisions" :key="choice" :value="choice">
+                      {{ decisionLabel(choice) }}
+                    </option>
+                  </select>
+                </label>
+              </span>
+            </li>
+          </ul>
+        </template>
 
         <!-- Both texts, not a count. A keyword has no revisions behind it, so
              an overwrite is final and the decision has to be made in sight of
@@ -393,7 +482,7 @@ async function runImport () {
         </div>
 
         <ul v-if="collisions.length" class="entries">
-          <li v-for="entry in collisions" :key="entry.index" class="entry">
+          <li v-for="entry in collisions" :key="entry.index" class="entry" data-test="collision">
             <span class="entry__name">{{ entry.title }}</span>
             <span class="entry__detail">
               {{ entry.state === 'ambiguous'
@@ -537,6 +626,17 @@ async function runImport () {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-sunken);
+}
+
+.transfer__group {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+/* A keyword left behind that a prompt still names: the prompt arrives
+   without it. Said in the colour of a warning, since it is one. */
+.transfer__warning {
+  color: var(--danger);
 }
 
 .transfer__decision select {

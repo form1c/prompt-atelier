@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Version** | 1.3 |
-| **Date** | 2026-09-03 |
-| **Describes** | Prompt Atelier 1.0.1 |
+| **Version** | 1.4 |
+| **Date** | 2026-09-24 |
+| **Describes** | Prompt Atelier 1.1.0 |
 | **Audience** | Operators setting up and running an installation |
 | **Not covered** | Working on the source. See `development.md` |
 
@@ -50,8 +50,8 @@ The script creates its own test installation with its own directory, database an
 One platform-independent archive is published per release, as `.tar.gz` and as `.zip`:
 
 ```
-promptatelier-1.0.1-universal.tar.gz
-promptatelier-1.0.1-universal.zip
+promptatelier-1.1.0-universal.tar.gz
+promptatelier-1.1.0-universal.zip
 ```
 
 It contains the application with the interface already built, but **no Ruby libraries**. The installer fetches those on its first run, guided by the bundled lock file `Gemfile.lock`.
@@ -112,15 +112,15 @@ An archive including the libraries can be produced yourself. This requires a mac
 
 The resulting archive contains the libraries and needs no internet access on the target machine. **Configuration and data of the source installation are not carried over.** The target machine asks for an administrative account of its own during installation.
 
-The name of the archive states the platform and the Ruby series, for example `promptatelier-1.0.1-x86_64-linux-gnu-ruby3.3.0.tar.gz`. It is usable only on machines of that kind.
+The name of the archive states the platform and the Ruby series, for example `promptatelier-1.1.0-x86_64-linux-gnu-ruby3.3.0.tar.gz`. It is usable only on machines of that kind.
 
 ---
 
 ## 2. Installation
 
 ```bash
-tar -xzf promptatelier-1.0.1-universal.tar.gz     # Linux
-cd promptatelier-1.0.1-universal
+tar -xzf promptatelier-1.1.0-universal.tar.gz     # Linux
+cd promptatelier-1.1.0-universal
 scripts/install.sh
 ```
 
@@ -341,12 +341,12 @@ After a restore every user is signed out. Sessions are held in the database and 
 
 1. Create a backup: `scripts/backup.sh`
 2. Stop the service
-3. Replace `app/`, `scripts/`, `doc/`, `README.md` and `LICENSE` with the new release
+3. Replace everything except `config/`, `data/` and `tools/` with the new release
 4. Update the schema: `scripts/migrate.sh`
 5. Start the service
 6. Query the health endpoint `/health`
 
-The directories `config/` and `data/` are left untouched.
+The directories `config/`, `data/` and `tools/` are left untouched. `tools/` holds `nssm.exe` on Windows, which is not part of the release. The operations manual lists in chapter 1 what is replaced.
 
 `migrate` creates a backup of its own before every schema step. Calling `scripts/migrate.sh --status` prints the pending steps without changing anything.
 

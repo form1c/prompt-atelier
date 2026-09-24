@@ -161,6 +161,26 @@ class ManifestTest < PromptAtelier::TestCase
     assert_equal 'backend', File.basename(app[:from]), 'backend/ becomes app/ (18.2)'
   end
 
+  # TF-633f: the operations manual lists what a release consists of, because
+  # updating means replacing all of it except what holds the installation's
+  # own state. The list said `app/`, `scripts/`, `doc/`, `README.md` and a
+  # `LICENSE` that does not exist, while the archive carried eight more
+  # entries, among them `VERSION`, which a security report is asked to quote.
+  # Held to the plan the build follows, so an entry added there has to be
+  # added to the manual as well.
+  def test_the_operations_manual_names_every_entry_of_a_release
+    delivered = plan.map { |step| step[:to].split('/').first }.uniq + ['VERSION'] # VERSION: written by the build
+
+    %w[operations.md operations.de.md].each do |manual|
+      text = File.read(File.join(CODE_ROOT, 'doc', manual), encoding: 'UTF-8')
+      layout = text[/^## 1\..*?^---$/m]
+      refute_nil layout, "#{manual}: chapter 1 not found"
+
+      missing = delivered.reject { |entry| layout.include?("`#{entry}`") || layout.include?("`#{entry}/`") }
+      assert_empty missing, "#{manual} does not list what the release carries"
+    end
+  end
+
   private
 
   def plan = M.plan(code: CODE_ROOT, project: File.expand_path('..', CODE_ROOT))

@@ -2,6 +2,27 @@
 
 All notable changes to this project are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-24
+
+Three requests from users, and three corrections found while working on them.
+
+### Added
+
+- **Choose what an import brings in.** Every prompt and keyword of a file that does not exist in the workspace yet can be created or skipped, and one choice sets all new entries at once. Creating is the default, so a file taken as it is arrives as before. When a skipped keyword is named by a prompt that is created, the preview says so, because that prompt arrives without it.
+- **Copy the text of a keyword from the list.** Every keyword in the list has a copy button, also for those who may only read keywords. Until now the text was reachable only through the edit form, which is closed to them. If the browser refuses the clipboard, the text is offered for selecting by hand, as on the prompt screen.
+
+### Changed
+
+- **The copy buttons stay in sight beside a long preview.** The bar with both copy buttons stays at the bottom of the window on every screen width while the preview is visible. Before, it did so only on narrow screens.
+- **Notices appear at the top right, below the header.** At the bottom they covered the copy button that had just been pressed.
+- An import request that sends a decision the preview did not offer for a new entry, such as overwriting it, is refused. A request without a decision for a new entry creates it, as before.
+
+### Fixed
+
+- **German messages are written with umlauts.** Eleven messages from the server and from form fields read `spaeter`, `gueltig` and the like.
+- **The German refusal of a newer export file named only format version 1.** It names versions 1 and 2, as the other languages did.
+- **The update instructions left files behind.** They named `app/`, `scripts/`, `doc/`, `README.md` and a `LICENSE` file that does not exist, while a release carries more, among them `VERSION`. They now say to replace everything except `config/`, `data/` and `tools/`. The installation guide had also left out `tools/`, where `nssm.exe` lives on Windows.
+
 ## [1.0.1] - 2026-09-03
 
 Service operation on Windows and Linux, found and fixed after 1.0.0 was published. Everything here was measured on the target systems, not inferred.

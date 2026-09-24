@@ -31,6 +31,18 @@ class VersionStatementsTest < PromptAtelier::TestCase
     end
   end
 
+  # The lock file repeats the version of both packages once more. It said
+  # 0.1.0 through two releases, because nothing held it to the source and
+  # npm only rewrites it on an install.
+  def test_tf680_the_lock_file_states_the_version_of_both_packages
+    lock = JSON.parse(File.read(File.join(CODE_ROOT, 'package-lock.json')))
+
+    assert_equal VERSION, lock['version'], 'package-lock.json disagrees at the top'
+    assert_equal VERSION, lock.dig('packages', '', 'version'), 'package-lock.json disagrees for the root package'
+    assert_equal VERSION, lock.dig('packages', 'frontend', 'version'),
+                 'package-lock.json disagrees for the frontend package'
+  end
+
   def test_tf680_no_document_names_a_different_version
     offenders = documents.flat_map do |path|
       text = File.read(path, encoding: 'UTF-8')

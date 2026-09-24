@@ -66,8 +66,8 @@ The application is designed for instances of up to 50 users and 20,000 prompts.
 Download the archive from the [releases page](../../releases). One platform-independent archive is published, and it runs on every supported system.
 
 ```bash
-tar -xzf promptatelier-1.0.1-universal.tar.gz
-cd promptatelier-1.0.1-universal
+tar -xzf promptatelier-1.1.0-universal.tar.gz
+cd promptatelier-1.1.0-universal
 scripts/install.sh
 ```
 
