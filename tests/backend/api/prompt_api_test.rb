@@ -131,6 +131,16 @@ class PromptApiTest < PromptAtelier::TestCase
     assert_equal 'private', copy['visibility']
   end
 
+  # TF-306b over the wire: the endpoint hands the word on to the service.
+  def test_tf306b_a_duplicate_takes_the_copy_suffix_it_is_sent
+    sign_in(:joerg)
+    csrf(:post, "#{prefix}/prompts/#{prompt('P-INST')}/duplicate",
+         { workspace_id: personal_of(:joerg), copy_suffix: '(copie)' })
+
+    assert_equal 201, last_response.status
+    assert JSON.parse(last_response.body).dig('prompt', 'title').end_with?(' (copie)')
+  end
+
   def test_tf202_listing_a_foreign_workspace_answers_404
     sign_in(:joerg)
 

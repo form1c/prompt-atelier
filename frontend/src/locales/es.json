@@ -221,6 +221,7 @@
     "copy_raw": "Copiar con marcadores",
     "copy_raw_hint": "Copia el prompt con todos los marcadores, esté rellenado lo que esté — incluidas las palabras clave activadas. Funciona incluso con campos obligatorios vacíos. Ctrl+Mayús+Intro.",
     "copied_raw": "Copiado al portapapeles con los marcadores.",
+    "copy_suffix": "(copia)",
     "copied_workbench": "Versión para este único uso copiada al portapapeles.",
     "copy_blocked": "Rellene primero los campos obligatorios.",
     "copy_manual_title": "El navegador ha rechazado el portapapeles",

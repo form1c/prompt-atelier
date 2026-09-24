@@ -348,6 +348,24 @@ describe('Collisions (FA-802)', () => {
 
     expect(JSON.parse(writingCalls(server).at(-1).options.body).decisions).toEqual({ 0: 'create', 1: 'overwrite' })
   })
+
+  // TF-306b: "als Kopie anlegen" names the copy in the language on the screen,
+  // so the import sends that word along.
+  it('sends the word for "copy" in the language of the interface', async () => {
+    const { wrapper, server } = await screen({
+      workspaces: ownerWorkspaces(),
+      routes: [
+        { method: 'POST', path: '/import/preview', body: collidingPreview },
+        { method: 'POST', path: '/import', body: { report: report() } }
+      ]
+    })
+
+    await pick(wrapper, '{}')
+    await wrapper.find('[data-test="import"]').trigger('click')
+    await settle()
+
+    expect(JSON.parse(writingCalls(server).at(-1).options.body).copy_suffix).toBe('(copy)')
+  })
 })
 
 // TF-347m: the new entries can be decided as well. Asked for by users: a

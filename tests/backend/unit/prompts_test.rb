@@ -509,6 +509,31 @@ class PromptsTest < PromptAtelier::TestCase
     end
   end
 
+  # --- TF-306b: the copy's title in the language on the screen --------------
+  #
+  # The server holds no translations, so the interface sends the word. Before,
+  # every copy ended in "(Kopie)", whatever language the person worked in.
+
+  def test_tf306b_a_copy_ends_in_the_suffix_the_interface_sends
+    with_instance do |db, ids|
+      source = db[:prompts].first(workspace_id: ids[:workspaces][:marketing])
+      copy_id, = P.duplicate(db, source, target_workspace_id: ids[:workspaces][:marketing],
+                                         actor_id: ids[:users][:sabine], copy_suffix: '(copie)')
+
+      assert_equal "#{source[:title]} (copie)", db[:prompts][id: copy_id][:title]
+    end
+  end
+
+  # Anything that is not a short line of text is not taken as a suffix. A
+  # client could send a number, a whole paragraph or a line break into a title.
+  def test_tf306b_an_unusable_suffix_falls_back_to_the_english_word
+    [nil, '', '   ', 42, 'x' * 41, "(Ko\npie)"].each do |sent|
+      assert_equal 'Titel (copy)', P.copy_title('Titel', sent), "sent: #{sent.inspect}"
+    end
+    assert_equal 'Titel (copia)', P.copy_title('Titel', '  (copia)  '), 'surrounding space is trimmed'
+    assert_equal "Titel #{'x' * 40}", P.copy_title('Titel', 'x' * 40), 'forty characters are still fine'
+  end
+
   # --- TF-306: duplicating across a workspace boundary ----------------------
 
   def test_tf306_a_copy_into_a_foreign_workspace_resolves_tags_and_reports_keywords
@@ -527,7 +552,7 @@ class PromptsTest < PromptAtelier::TestCase
                                      target_workspace_id: target, actor_id: ids[:users][:joerg])
 
       copy = db[:prompts][id: copy_id]
-      assert_equal 'Titel (Kopie)', copy[:title]
+      assert_equal 'Titel (copy)', copy[:title], 'no suffix sent, so the English default'
       assert_equal 'private', copy[:visibility]
       assert_equal 'draft', copy[:status]
       assert_equal ids[:users][:joerg], copy[:owner_id]

@@ -84,7 +84,7 @@ scripts/service_install.sh     # als Systemdienst mit automatischem Start
 ### Erste Schritte
 
 1. Die Adresse im Browser öffnen und mit dem bei der Installation angelegten Konto anmelden.
-2. Optional Beispielinhalte laden: `scripts/seed_demo.sh`. Der Aufruf mit `--remove` entfernt sie wieder.
+2. Optional Beispielinhalte laden: `scripts/seed_demo.sh`, deutsch bei `locale: de` in `config.yml` oder mit `--language de`, sonst englisch. Der Aufruf mit `--remove` entfernt sie wieder.
 3. Einen Prompt öffnen, die Felder ausfüllen und den Text kopieren.
 
 ### Datensicherung

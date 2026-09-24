@@ -1,0 +1,2080 @@
+{
+  "format": "promptatelier-export",
+  "version": 2,
+  "_note": "Example package. Offered as the example content of an empty library and written into a development installation by scripts/seed_demo.sh, so the core workflow can be tried against a realistic stock. Format as the export files. The German version is examples.de.json.",
+  "workspace": {
+    "name": "Examples"
+  },
+  "keywords": [
+    {
+      "name": "role",
+      "description": "Gives the model an expert role",
+      "text": "You are an experienced expert in this field.",
+      "position": "prepend",
+      "sort_order": 10
+    },
+    {
+      "name": "context",
+      "description": "Names where the text is published",
+      "text": "The text appears in a specialist blog.",
+      "position": "prepend",
+      "sort_order": 20
+    },
+    {
+      "name": "formal",
+      "description": "Factual, formal tone",
+      "text": "Write in a factual, formal tone.",
+      "position": "append",
+      "sort_order": 10
+    },
+    {
+      "name": "casual",
+      "description": "Casual, personal tone",
+      "text": "Write casually and personally, without jargon.",
+      "position": "append",
+      "sort_order": 10
+    },
+    {
+      "name": "brief",
+      "description": "Limits the length",
+      "text": "Keep it short, at most 150 words.",
+      "position": "append",
+      "sort_order": 20
+    },
+    {
+      "name": "detailed",
+      "description": "Asks for detail",
+      "text": "Work out every point and give the reasons for it.",
+      "position": "append",
+      "sort_order": 20
+    },
+    {
+      "name": "examples",
+      "description": "Asks for examples",
+      "text": "Give a concrete example for every point.",
+      "position": "append",
+      "sort_order": 30
+    },
+    {
+      "name": "steps",
+      "description": "Asks for a sequence of steps",
+      "text": "Structure the answer as numbered steps.",
+      "position": "append",
+      "sort_order": 30
+    },
+    {
+      "name": "german",
+      "description": "Answer in German",
+      "text": "Antworte auf Deutsch.",
+      "position": "append",
+      "sort_order": 40
+    },
+    {
+      "name": "sources",
+      "description": "Asks for sources",
+      "text": "Name two sources at the end.",
+      "position": "append",
+      "sort_order": 40
+    }
+  ],
+  "prompts": [
+    {
+      "title": "Blog post generator",
+      "description": "Writes an SEO article on any topic",
+      "body": "Write a blog post about {{topic}} for {{audience}}.\n\nThe post should be {{length}} and answer the questions readers ask most.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "seo",
+        "content",
+        "blog"
+      ],
+      "default_keywords": [
+        "role",
+        "formal"
+      ],
+      "variables": [
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "audience",
+          "label": "Audience",
+          "type": "select",
+          "default_value": "Beginners",
+          "options": [
+            "Beginners",
+            "Advanced",
+            "Professionals"
+          ],
+          "required": true,
+          "position": 1
+        },
+        {
+          "key": "length",
+          "label": "Length",
+          "type": "select",
+          "default_value": "medium",
+          "options": [
+            "short",
+            "medium",
+            "detailed"
+          ],
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Product description",
+      "description": "Describes a product for an online shop",
+      "body": "Write a product description for {{product}}.\n\nHighlight {{feature}} and address {{audience}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "shop",
+        "content"
+      ],
+      "default_keywords": [
+        "casual"
+      ],
+      "variables": [
+        {
+          "key": "product",
+          "label": "Product",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "feature",
+          "label": "Most important feature",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "audience",
+          "label": "Audience",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Newsletter opening",
+      "description": "Opens a newsletter with a hook",
+      "body": "Write the opening of a newsletter about {{topic}}.\n\nThe hook is {{hook}}. The issue comes out on {{date}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "newsletter",
+        "content"
+      ],
+      "default_keywords": [
+        "casual",
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "hook",
+          "label": "Hook",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "date",
+          "label": "Publication date",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Social media post",
+      "description": "Short post for a social network",
+      "body": "Write a post for {{network}} about {{topic}}.\n\nAt most {{characters}} characters, with a fitting hashtag.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "social",
+        "content"
+      ],
+      "default_keywords": [
+        "casual"
+      ],
+      "variables": [
+        {
+          "key": "network",
+          "label": "Network",
+          "type": "select",
+          "default_value": "LinkedIn",
+          "options": [
+            "LinkedIn",
+            "Mastodon",
+            "Instagram"
+          ],
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 1
+        },
+        {
+          "key": "characters",
+          "label": "Character count",
+          "type": "number",
+          "default_value": "280",
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Press release",
+      "description": "Announcement for the trade press",
+      "body": "Write a press release about {{occasion}}.\n\nThe company is {{company}}, the contact person is {{contact}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "press"
+      ],
+      "default_keywords": [
+        "formal",
+        "sources"
+      ],
+      "variables": [
+        {
+          "key": "occasion",
+          "label": "Occasion",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "company",
+          "label": "Company",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "contact",
+          "label": "Contact person",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Landing page copy",
+      "description": "Copy for a landing page with a clear call to action",
+      "body": "Write the copy of a landing page for {{offer}}.\n\nThe call to action is {{cta}}. Address {{audience}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "web",
+        "content"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "offer",
+          "label": "Offer",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "cta",
+          "label": "Call to action",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "audience",
+          "label": "Audience",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Ad copy",
+      "description": "Short advertising copy for an ad",
+      "body": "Write three versions of an ad for {{product}}.\n\nEach version at most {{characters}} characters.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "advertising"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "product",
+          "label": "Product",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "characters",
+          "label": "Character count",
+          "type": "number",
+          "default_value": "90",
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Subject line workshop",
+      "description": "Comes up with subject lines for an email",
+      "body": "Suggest ten subject lines for an email about {{topic}}.\n\nThe recipients are {{recipients}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "newsletter"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "recipients",
+          "label": "Recipients",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Content plan",
+      "description": "Editorial plan for a period of time",
+      "body": "Draft an editorial plan for {{period}} with the focus {{focus}}.\n\nOne piece per week, with title, format and audience.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "content",
+        "planning"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "period",
+          "label": "Period",
+          "type": "text",
+          "default_value": "one quarter",
+          "options": null,
+          "required": false,
+          "position": 0
+        },
+        {
+          "key": "focus",
+          "label": "Focus",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Find SEO keywords",
+      "description": "Collects search terms for a topic",
+      "body": "List twenty search terms for {{topic}}, sorted by estimated search volume.\n\nMark the terms that show an intent to buy.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "seo"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Friendly support reply",
+      "description": "Draft reply to a customer request",
+      "body": "Write a reply to the following customer request:\n\n{{request}}\n\nThe customer is called {{name}}. The current state is: {{state}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "support",
+        "customer"
+      ],
+      "default_keywords": [
+        "casual"
+      ],
+      "variables": [
+        {
+          "key": "request",
+          "label": "Request",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "name",
+          "label": "Customer name",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "state",
+          "label": "Current state",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Reply to a complaint",
+      "description": "Reply to a complaint that calms things down",
+      "body": "Reply to this complaint:\n\n{{complaint}}\n\nTake the frustration seriously and name {{action}} as the next step.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "support",
+        "customer"
+      ],
+      "default_keywords": [
+        "formal"
+      ],
+      "variables": [
+        {
+          "key": "complaint",
+          "label": "Complaint",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "action",
+          "label": "Promised action",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Decline politely",
+      "description": "Turns down a request without putting people off",
+      "body": "Write a reply declining {{request}}.\n\nThe reason is {{reason}}. Offer {{alternative}} as an alternative.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "communication"
+      ],
+      "default_keywords": [
+        "formal",
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "request",
+          "label": "Request",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "reason",
+          "label": "Reason",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "alternative",
+          "label": "Alternative",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Meeting request",
+      "description": "Asks for an appointment",
+      "body": "Write a short message to {{recipient}} asking for a meeting about {{occasion}}.\n\nSuggest {{slots}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "communication"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "recipient",
+          "label": "Recipient",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "occasion",
+          "label": "Occasion",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "slots",
+          "label": "Suggested times",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Reminder of an unpaid invoice",
+      "description": "Friendly payment reminder",
+      "body": "Write a payment reminder to {{recipient}} for invoice {{number}} of {{amount}} euros.\n\nThe invoice was due on {{due}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "accounting"
+      ],
+      "default_keywords": [
+        "formal"
+      ],
+      "variables": [
+        {
+          "key": "recipient",
+          "label": "Recipient",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "number",
+          "label": "Invoice number",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "amount",
+          "label": "Amount",
+          "type": "number",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        },
+        {
+          "key": "due",
+          "label": "Due date",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 3
+        }
+      ]
+    },
+    {
+      "title": "Write an FAQ entry",
+      "description": "Phrases a question and its answer",
+      "body": "Write an FAQ entry for the question: {{question}}\n\nThe answer should be {{length}} and take {{note}} into account.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "support",
+        "content"
+      ],
+      "default_keywords": [
+        "examples"
+      ],
+      "variables": [
+        {
+          "key": "question",
+          "label": "Question",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "length",
+          "label": "Length",
+          "type": "select",
+          "default_value": "short",
+          "options": [
+            "short",
+            "medium",
+            "detailed"
+          ],
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "note",
+          "label": "To take into account",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Conversation guide",
+      "description": "Guide for a customer conversation",
+      "body": "Draft a guide for a conversation with {{partner}} about {{topic}}.\n\nThe goal of the conversation is {{goal}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "sales"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "partner",
+          "label": "Conversation partner",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "goal",
+          "label": "Goal",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Quote text",
+      "description": "Text for a quote to a customer",
+      "body": "Write a quote for {{service}} to {{customer}}.\n\nThe price is {{price}} euros, the term {{term}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "sales"
+      ],
+      "default_keywords": [
+        "formal"
+      ],
+      "variables": [
+        {
+          "key": "service",
+          "label": "Service",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "customer",
+          "label": "Customer",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "price",
+          "label": "Price",
+          "type": "number",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        },
+        {
+          "key": "term",
+          "label": "Term",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 3
+        }
+      ]
+    },
+    {
+      "title": "Code review checklist",
+      "description": "Reviews a pull request in a structured way",
+      "body": "Review the following change:\n\n{{diff}}\n\nLook at readability, error handling and tests. The language is {{language}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code",
+        "review"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "diff",
+          "label": "Change",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "language",
+          "label": "Programming language",
+          "type": "select",
+          "default_value": "Ruby",
+          "options": [
+            "Ruby",
+            "JavaScript",
+            "Python",
+            "Java"
+          ],
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Explain an error message",
+      "description": "Explains an error message and names causes",
+      "body": "Explain this error message:\n\n{{message}}\n\nThe environment is {{environment}}. Name the three most likely causes.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code",
+        "debugging"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "message",
+          "label": "Error message",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "environment",
+          "label": "Environment",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Derive test cases",
+      "description": "Derives test cases from a requirement",
+      "body": "Derive test cases from this requirement:\n\n{{requirement}}\n\nFor every case, state the starting point and the expected outcome.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "testing"
+      ],
+      "default_keywords": [
+        "examples"
+      ],
+      "variables": [
+        {
+          "key": "requirement",
+          "label": "Requirement",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Commit message",
+      "description": "Writes a commit message",
+      "body": "Write a commit message for this change:\n\n{{change}}\n\nFirst line at most 72 characters, then the reasoning.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "change",
+          "label": "Change",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Build an SQL query",
+      "description": "Writes a query for a question",
+      "body": "Write an SQL query that answers {{question}}.\n\nThe tables are:\n{{schema}}\n\nThe database system is {{system}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code",
+        "data"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "question",
+          "label": "Business question",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "schema",
+          "label": "Tables",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "system",
+          "label": "Database system",
+          "type": "select",
+          "default_value": "SQLite",
+          "options": [
+            "SQLite",
+            "PostgreSQL",
+            "MariaDB"
+          ],
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Suggest a refactoring",
+      "description": "Suggests improvements to code",
+      "body": "Suggest improvements for this code:\n\n{{code}}\n\nGive the reason for every suggestion and say what it costs.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code",
+        "review"
+      ],
+      "default_keywords": [
+        "detailed"
+      ],
+      "variables": [
+        {
+          "key": "code",
+          "label": "Code",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Document an API endpoint",
+      "description": "Describes an endpoint",
+      "body": "Document this endpoint:\n\n{{endpoint}}\n\nName its purpose, parameters, response and error cases.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code",
+        "docs"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "endpoint",
+          "label": "Endpoint",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Explain a regular expression",
+      "description": "Takes a regular expression apart",
+      "body": "Explain this regular expression piece by piece:\n\n{{expression}}\n\nGive two strings that match and two that do not.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code"
+      ],
+      "default_keywords": [
+        "examples"
+      ],
+      "variables": [
+        {
+          "key": "expression",
+          "label": "Expression",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Migration plan",
+      "description": "Plans the move to a new version",
+      "body": "Draft a plan for moving from {{old}} to {{new}}.\n\nName the order, the way back and the places where it can go wrong.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "operations"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "old",
+          "label": "Current state",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "new",
+          "label": "New state",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Read a log excerpt",
+      "description": "Interprets a log excerpt",
+      "body": "Interpret this log excerpt:\n\n{{excerpt}}\n\nWhat happened, and what would be the next step?",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "operations",
+        "debugging"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "excerpt",
+          "label": "Excerpt",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Naming suggestions",
+      "description": "Finds names for classes, fields or services",
+      "body": "Suggest ten names for {{subject}}.\n\nThe language is {{language}}, the naming convention {{convention}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "code"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "subject",
+          "label": "Subject",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "language",
+          "label": "Language",
+          "type": "text",
+          "default_value": "English",
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "convention",
+          "label": "Convention",
+          "type": "select",
+          "default_value": "snake_case",
+          "options": [
+            "snake_case",
+            "camelCase",
+            "PascalCase"
+          ],
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Summarise a text",
+      "description": "Summarises a long text",
+      "body": "Summarise the following text:\n\n{{text}}\n\nThe summary should be {{length}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "analysis"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "length",
+          "label": "Length",
+          "type": "select",
+          "default_value": "short",
+          "options": [
+            "short",
+            "medium",
+            "detailed"
+          ],
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Pros and cons",
+      "description": "Sets the arguments of both sides against each other",
+      "body": "Set out the arguments for and against {{question}}.\n\nTake the point of view of {{viewpoint}} into account.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "analysis"
+      ],
+      "default_keywords": [
+        "detailed"
+      ],
+      "variables": [
+        {
+          "key": "question",
+          "label": "Question",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "viewpoint",
+          "label": "Point of view",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Name the risks",
+      "description": "Collects the risks of a project",
+      "body": "Name the risks of {{project}}.\n\nRate every risk by likelihood and impact.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "analysis",
+        "planning"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "project",
+          "label": "Project",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Interpret figures",
+      "description": "Explains a series of key figures",
+      "body": "Interpret these figures:\n\n{{figures}}\n\nThe period is {{period}}. Say what stands out and what it could mean.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "analysis",
+        "data"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "figures",
+          "label": "Figures",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "period",
+          "label": "Period",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Comparison table",
+      "description": "Compares several options",
+      "body": "Compare {{options}} by {{criteria}}.\n\nPresent the result as a table and give a recommendation.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "analysis"
+      ],
+      "default_keywords": [
+        "detailed"
+      ],
+      "variables": [
+        {
+          "key": "options",
+          "label": "Options",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "criteria",
+          "label": "Criteria",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Extract the key points",
+      "description": "Pulls the key points out of a text",
+      "body": "Name the five key points of the following text:\n\n{{text}}",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "analysis"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Questions about a text",
+      "description": "Produces follow-up questions about a text",
+      "body": "Ask ten follow-up questions about this text:\n\n{{text}}\n\nThe aim of the questions is {{aim}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "analysis"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "aim",
+          "label": "Aim",
+          "type": "text",
+          "default_value": "finding gaps",
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Shorten a text",
+      "description": "Shortens a text to a given length",
+      "body": "Shorten the following text to {{words}} words without losing any statement:\n\n{{text}}",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "words",
+          "label": "Words",
+          "type": "number",
+          "default_value": "150",
+          "options": null,
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Change the tone",
+      "description": "Rewrites a text in another tone",
+      "body": "Rewrite the following text in a {{tone}} tone:\n\n{{text}}",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "tone",
+          "label": "Tone",
+          "type": "select",
+          "default_value": "factual",
+          "options": [
+            "factual",
+            "promotional",
+            "casual"
+          ],
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Check spelling",
+      "description": "Corrects a text",
+      "body": "Correct the spelling and punctuation of the following text and list the changes:\n\n{{text}}",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Translate",
+      "description": "Translates a text",
+      "body": "Translate the following text into {{target}}:\n\n{{text}}\n\nKeep the tone.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing",
+        "language"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "target",
+          "label": "Target language",
+          "type": "select",
+          "default_value": "German",
+          "options": [
+            "German",
+            "French",
+            "Spanish"
+          ],
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Plain language",
+      "description": "Rewrites a text in plain language",
+      "body": "Rewrite the following text in plain language:\n\n{{text}}\n\nShort sentences, no jargon.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing",
+        "accessibility"
+      ],
+      "default_keywords": [],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Draft an outline",
+      "description": "Drafts the outline of a text",
+      "body": "Draft an outline for a text about {{topic}} with {{chapters}} chapters.\n\nThe readers are {{audience}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "chapters",
+          "label": "Number of chapters",
+          "type": "number",
+          "default_value": "5",
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "audience",
+          "label": "Readers",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Title suggestions",
+      "description": "Finds titles for a text",
+      "body": "Suggest ten titles for a text about {{topic}}.\n\nThree factual, three that make people curious, four short ones.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Put a quote in context",
+      "description": "Places a quote in its context",
+      "body": "Put this quote in context:\n\n{{quote}}\n\nThe context is {{context}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "editing"
+      ],
+      "default_keywords": [
+        "sources"
+      ],
+      "variables": [
+        {
+          "key": "quote",
+          "label": "Quote",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "context",
+          "label": "Context",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Meeting minutes",
+      "description": "Turns notes into minutes",
+      "body": "Turn these notes into minutes:\n\n{{notes}}\n\nThe meeting took place on {{date}}, participants: {{participants}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "organisation"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "notes",
+          "label": "Notes",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "date",
+          "label": "Date",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "participants",
+          "label": "Participants",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Derive a task list",
+      "description": "Pulls the tasks out of a text",
+      "body": "Pull the tasks out of this text:\n\n{{text}}\n\nFor every task, name the person responsible and a deadline.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "organisation"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "text",
+          "label": "Text",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Agenda",
+      "description": "Drafts an agenda",
+      "body": "Draft an agenda for a meeting about {{topic}}.\n\nDuration: {{duration}} minutes, participants: {{participants}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "organisation"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "topic",
+          "label": "Topic",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "duration",
+          "label": "Duration in minutes",
+          "type": "number",
+          "default_value": "60",
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "participants",
+          "label": "Participants",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Decision paper",
+      "description": "Prepares a decision",
+      "body": "Prepare a decision on {{question}}.\n\nName the situation, the options, a recommendation and the consequences.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "organisation",
+        "planning"
+      ],
+      "default_keywords": [
+        "detailed"
+      ],
+      "variables": [
+        {
+          "key": "question",
+          "label": "Question",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Status report",
+      "description": "Sums up the state of a project",
+      "body": "Write a status report on {{project}}.\n\nState: {{state}}. Next steps: {{next}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "organisation"
+      ],
+      "default_keywords": [
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "project",
+          "label": "Project",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "state",
+          "label": "State",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "next",
+          "label": "Next steps",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Onboarding plan",
+      "description": "Plans the first weeks of a new person",
+      "body": "Draft an onboarding plan for {{role}} over {{weeks}} weeks.\n\nThe team is {{team}}.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "organisation"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "role",
+          "label": "Role",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "weeks",
+          "label": "Weeks",
+          "type": "number",
+          "default_value": "4",
+          "options": null,
+          "required": false,
+          "position": 1
+        },
+        {
+          "key": "team",
+          "label": "Team",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": false,
+          "position": 2
+        }
+      ]
+    },
+    {
+      "title": "Prepare a retrospective",
+      "description": "Prepares a look back",
+      "body": "Prepare a retrospective on {{period}}.\n\nAsk about what went well, what did not, and what should change.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "organisation"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "period",
+          "label": "Period",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        }
+      ]
+    },
+    {
+      "title": "Compte rendu d'entretien",
+      "description": "Résume un entretien en points clairs, en français",
+      "body": "Rédige le compte rendu de l'entretien avec {{prénom}} au sujet de {{sujet}}.\n\nGarde au cœur du texte ce qui a été décidé : les points d'accord, les questions restées ouvertes et la prochaine échéance. Cite les phrases importantes entre « guillemets ».",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "meeting",
+        "summary"
+      ],
+      "default_keywords": [
+        "role",
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "prénom",
+          "label": "Prénom",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "sujet",
+          "label": "Sujet de l'entretien",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Descrizione di una città",
+      "description": "Presenta una città per un testo di viaggio, in italiano",
+      "body": "Descrivi {{città}} per un lettore che non c'è mai stato.\n\nComincia da ciò che si vede per primo, poi passa a ciò che si sente: il ritmo delle strade, i caffè, la luce della sera. Chiudi con {{numero}} motivi per andarci davvero.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "text",
+        "travel"
+      ],
+      "default_keywords": [
+        "detailed"
+      ],
+      "variables": [
+        {
+          "key": "città",
+          "label": "Città",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "numero",
+          "label": "Quanti motivi",
+          "type": "number",
+          "default_value": "3",
+          "options": null,
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Balance del año",
+      "description": "Repasa un año de trabajo y saca conclusiones, en español",
+      "body": "Haz el balance del año {{año}} para {{equipo}}.\n\n¿Qué salió bien y qué no? ¡Sé concreto! Nombra tres logros, tres cosas que costaron más de lo previsto, y una que el año que viene se hará de otra manera.",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "retrospective",
+        "team"
+      ],
+      "default_keywords": [
+        "steps"
+      ],
+      "variables": [
+        {
+          "key": "año",
+          "label": "Año",
+          "type": "text",
+          "default_value": "2026",
+          "options": null,
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "equipo",
+          "label": "Equipo o persona",
+          "type": "text",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 1
+        }
+      ]
+    },
+    {
+      "title": "Release notes from a changelog",
+      "description": "Turns a raw changelog into notes people actually read, in English",
+      "body": "Turn the changelog below into release notes for {{audience}}.\n\nLead with what changed for them, not with what changed in the code. Group the entries, drop everything that is invisible from the outside, and keep it under {{limit}} lines.\n\nChangelog:\n{{changelog}}",
+      "visibility": "workspace",
+      "status": "active",
+      "model_hint": null,
+      "tags": [
+        "development",
+        "text"
+      ],
+      "default_keywords": [
+        "role",
+        "brief"
+      ],
+      "variables": [
+        {
+          "key": "audience",
+          "label": "Who reads them",
+          "type": "select",
+          "default_value": "Users",
+          "options": [
+            "Users",
+            "Administrators",
+            "Developers"
+          ],
+          "required": true,
+          "position": 0
+        },
+        {
+          "key": "limit",
+          "label": "At most how many lines",
+          "type": "number",
+          "default_value": "20",
+          "options": null,
+          "required": true,
+          "position": 1
+        },
+        {
+          "key": "changelog",
+          "label": "The raw changelog",
+          "type": "multiline",
+          "default_value": null,
+          "options": null,
+          "required": true,
+          "position": 2
+        }
+      ]
+    }
+  ]
+}

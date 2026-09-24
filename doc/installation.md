@@ -436,7 +436,7 @@ For `reset_admin_password` the address is not a switch but a free argument. It i
 | `backup` | `--no-rotate` | create a backup |
 | `restore` | `<file>`, `--yes` | restore a backup |
 | `reset_admin_password` | `[address]`, `--generate` | emergency access |
-| `seed_demo` | `--remove`, `--yes`, `--email <address>` | add or remove sample content |
+| `seed_demo` | `--remove`, `--yes`, `--email <address>`, `--language de` or `en` | add or remove sample content |
 | `package` | `[target directory]`, `--zip` | turn this installation into an archive |
 | `export_all` | `[file]` | write the instance as a migration file |
 | `import_all` | `<file>` | load a migration file into an empty instance |

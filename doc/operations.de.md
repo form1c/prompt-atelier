@@ -247,7 +247,7 @@ Vergibt ein neues Passwort für ein Konto mit Instanzverwaltungsrechten. Alle Si
 
 ### 3.9 `seed_demo`
 
-Legt Beispielinhalte im Workspace „Beispiele“ an. Dieses Skript verändert die vorhandene Installation und fragt vor der Ausführung nach.
+Legt Beispielinhalte an, deutsch im Workspace „Beispiele“ oder englisch im Workspace „Examples“. Die Sprache folgt `locale` in `config.yml`: `de` ergibt das deutsche Paket, jeder andere Wert und ein leerer das englische. Die Ausgabe nennt das gewählte Paket. Dieses Skript verändert die vorhandene Installation und fragt vor der Ausführung nach.
 
 | Angabe | Wirkung |
 |---|---|
@@ -255,6 +255,7 @@ Legt Beispielinhalte im Workspace „Beispiele“ an. Dieses Skript verändert d
 | `--yes` | ohne Rückfrage |
 | `--email <adresse>` | Eigentümer der angelegten Prompts |
 | `--workspace <name>` | abweichender Workspace-Name |
+| `--language de` oder `--language en` | das Paket in dieser Sprache, unabhängig von `locale`. `--remove` entfernt das Paket der angegebenen Sprache |
 
 Inhalte außerhalb des angelegten Workspace werden nicht verändert. `--remove` erkennt auch umbenannte Beispielprompts und lässt eigene Inhalte im selben Workspace unberührt.
 

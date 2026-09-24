@@ -4,7 +4,7 @@
 #
 # Written for NT-3: the core workflow W-1 is to be tried against a realistic
 # stock, and "find a particular prompt among about fifty" says nothing with
-# six of them. The prompts come from examples/examples.json, the sample
+# six of them. The prompts come from examples/examples.de.json or .en.json, the sample
 # package the delivery carries anyway (BT-17, FA-802) — so this script needs
 # no data of its own and the package gets exercised long before the import of
 # AP-14 exists.
@@ -33,7 +33,25 @@ module PromptAtelier
     # nobody else uses could not have been added by accident.
     MARKER = 'beispiel'
 
+    # Two packages with the same prompts, in German and in English. Each
+    # carries its own marker tag, in its own language, so --remove takes back
+    # the package of the language it is given and nothing else.
+    PACKAGES = {
+      'de' => { file: 'examples.de.json', marker: MARKER },
+      'en' => { file: 'examples.en.json', marker: 'example' }
+    }.freeze
+
     module_function
+
+    # The configured language decides, and an empty one means English: the
+    # interface's base language, and the one more people read. --language
+    # overrides it, and the output says which package it is and how to take
+    # the other.
+    def language_for(config, options)
+      return options[:language] if options[:language]
+
+      config['locale'].to_s.start_with?('de') ? 'de' : 'en'
+    end
 
     def run(argv = [])
       options = parse(argv)
@@ -54,6 +72,13 @@ module PromptAtelier
       say(t('seed.database', path: config.database_path))
 
       return 1 unless usable?(config)
+
+      @language = language_for(config, options)
+      unless PACKAGES.key?(@language)
+        bad(t('seed.unknown_language', language: @language, known: PACKAGES.keys.join(', ')))
+        return 1
+      end
+      say(t('seed.language', file: PACKAGES[@language][:file]))
 
       package = load_package
       return 1 if package.nil?
@@ -112,7 +137,7 @@ module PromptAtelier
     def marked(package)
       prompts = package['prompts'].map do |prompt|
         prompt.merge(
-          'tags' => (Array(prompt['tags']) + [MARKER]).uniq,
+          'tags' => (Array(prompt['tags']) + [marker]).uniq,
           'visibility' => prompt['visibility'] || 'workspace',
           'status' => prompt['status'] || 'active'
         )
@@ -125,7 +150,7 @@ module PromptAtelier
 
     def remove(db, workspace_name)
       workspace = db[:workspaces].first(name: workspace_name)
-      tag = workspace && db[:tags].first(workspace_id: workspace[:id], name: MARKER)
+      tag = workspace && db[:tags].first(workspace_id: workspace[:id], name: marker)
 
       if tag.nil?
         note(t('seed.nothing_to_remove', workspace: workspace_name))
@@ -169,13 +194,15 @@ module PromptAtelier
     end
 
     def tag_names
-      (Array(load_package&.fetch('prompts', nil)).flat_map { |prompt| Array(prompt['tags']) } + [MARKER]).uniq
+      (Array(load_package&.fetch('prompts', nil)).flat_map { |prompt| Array(prompt['tags']) } + [marker]).uniq
     end
 
     # --- surroundings ------------------------------------------------------
 
+    def marker = PACKAGES.fetch(@language || 'de')[:marker]
+
     def load_package
-      path = File.join(root, 'examples', 'examples.json')
+      path = File.join(root, 'examples', PACKAGES.fetch(@language || 'de')[:file])
       unless File.file?(path)
         bad(t('seed.package_missing', path: path))
         return nil
@@ -253,7 +280,8 @@ module PromptAtelier
         remove: argv.include?('--remove'),
         yes: argv.include?('--yes'),
         email: value_of(argv, '--email'),
-        workspace: value_of(argv, '--workspace')
+        workspace: value_of(argv, '--workspace'),
+        language: value_of(argv, '--language')
       }
     end
 

@@ -201,6 +201,7 @@
   "seed": {
     "title": "Loading example data",
     "database": "Database: {path}",
+    "language": "Example package: {file}. Choose the other language with --language de or --language en.",
     "workspace": "Workspace: {name}",
     "account": "As account: {email}",
     "confirm": "This database will be changed. Continue? [y/N]",
@@ -217,7 +218,8 @@
     "schema_outdated": "The schema is not up to date (pending: {versions}). Run 'migrate' first.",
     "unknown_account": "No account with the address {email}.",
     "no_admin": "There is no account with instance administrator rights. Run the initial setup.",
-    "ambiguous": "Several instance administrators exist: {emails}. Name the address you mean with --email."
+    "ambiguous": "Several instance administrators exist: {emails}. Name the address you mean with --email.",
+    "unknown_language": "Unknown language: {language}. Known: {known}. Nothing was written."
   },
   "reset_password": {
     "title": "Emergency access: reset password",

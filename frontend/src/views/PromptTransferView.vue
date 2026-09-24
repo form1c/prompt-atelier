@@ -66,9 +66,12 @@ async function confirm () {
 
   try {
     const path = moving.value ? 'move' : 'duplicate'
-    const payload = await post(`/prompts/${prompt.value.id}/${path}`, {
-      body: { workspace_id: chosen.value }
-    })
+    // The copy's title ends in the word for "copy" in the language on the
+    // screen. The server has no translations and uses what it is sent.
+    const body = moving.value
+      ? { workspace_id: chosen.value }
+      : { workspace_id: chosen.value, copy_suffix: t('prompt.copy_suffix') }
+    const payload = await post(`/prompts/${prompt.value.id}/${path}`, { body })
 
     announce(payload)
     await router.replace(destination(payload))

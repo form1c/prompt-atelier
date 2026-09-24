@@ -283,12 +283,25 @@ class TransferTest < PromptAtelier::TestCase
       marketing, = furnish(db, ids)
       T.import(db, workspace_id: marketing, owner_id: ids[:users][:sabine],
                    package: T.parse(JSON.generate(one_prompt('Reisebericht'))),
-                   decisions: { '0' => 'copy' })
+                   decisions: { '0' => 'copy' }, copy_suffix: '(Kopie)')
 
       assert_equal 'Schreibe über {{ziel}} für {{gruppe}}.',
                    db[:prompts].first(workspace_id: marketing, title: 'Reisebericht')[:body]
       assert_equal 'Ein ganz anderer Text.',
                    db[:prompts].first(workspace_id: marketing, title: 'Reisebericht (Kopie)')[:body]
+    end
+  end
+
+  # TF-306b for the import: without a suffix from the interface the copy ends
+  # in the English word, like a duplicate does.
+  def test_tf306b_an_import_copy_without_a_suffix_ends_in_the_english_word
+    with_instance do |db, ids|
+      marketing, = furnish(db, ids)
+      report = T.import(db, workspace_id: marketing, owner_id: ids[:users][:sabine],
+                            package: T.parse(JSON.generate(one_prompt('Reisebericht'))),
+                            decisions: { '0' => 'copy' })
+
+      assert_equal ['Reisebericht (copy)'], report['created']
     end
   end
 

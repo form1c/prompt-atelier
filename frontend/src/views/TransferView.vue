@@ -268,7 +268,10 @@ async function runImport () {
         workspace_id: session.selectedWorkspaceId,
         content: content.value,
         decisions: decisions.value,
-        keyword_decisions: keywordDecisions.value
+        keyword_decisions: keywordDecisions.value,
+        // For "als Kopie anlegen": the title of the copy ends in this word,
+        // in the language on the screen.
+        copy_suffix: t('prompt.copy_suffix')
       }
     })
     report.value = payload.report

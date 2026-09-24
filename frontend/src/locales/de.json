@@ -221,6 +221,7 @@
     "copy_raw": "Mit Platzhaltern kopieren",
     "copy_raw_hint": "Kopiert den Prompt mit allen Platzhaltern, gleich was ausgefüllt ist — die eingeschalteten Keywords inbegriffen. Funktioniert auch bei leeren Pflichtfeldern. Strg+Umschalt+Eingabe.",
     "copied_raw": "Mit Platzhaltern in die Zwischenablage kopiert.",
+    "copy_suffix": "(Kopie)",
     "copied_workbench": "Fassung für diese Verwendung in die Zwischenablage kopiert.",
     "copy_blocked": "Zuerst die Pflichtfelder ausfüllen.",
     "copy_manual_title": "Der Browser hat die Zwischenablage verweigert",

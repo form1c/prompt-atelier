@@ -52,7 +52,8 @@ class IgnoreRulesTest < PromptAtelier::TestCase
     backend/app.rb
     doc/installation.md
     scripts/lib/service_run.rb
-    examples/examples.json
+    examples/examples.de.json
+    examples/examples.en.json
     tests/vectors/rendering.json
     img/PromptAtelier-Login.jpg
     frontend/src/main.js

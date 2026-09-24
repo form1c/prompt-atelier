@@ -617,7 +617,8 @@ module PromptAtelier
       authorize!(Access.for_target_workspace(db, current_user, target))
 
       id, dropped = with_prompt_refusal do
-        Prompts.duplicate(db, prompt, target_workspace_id: target, actor_id: current_user[:id])
+        Prompts.duplicate(db, prompt, target_workspace_id: target, actor_id: current_user[:id],
+                                      copy_suffix: json_body['copy_suffix'])
       end
       json_response(201, prompt: public_prompt(db, db[:prompts][id: id], full: true),
                          dropped_keywords: dropped)
@@ -737,7 +738,8 @@ module PromptAtelier
       report = with_transfer_refusal do
         Transfer.import(db, workspace_id: workspace_id, owner_id: current_user[:id],
                             package: package, decisions: json_body['decisions'] || {},
-                            keyword_decisions: json_body['keyword_decisions'] || {})
+                            keyword_decisions: json_body['keyword_decisions'] || {},
+                            copy_suffix: json_body['copy_suffix'])
       end
       # SEC-09 names the import by name. The export is logged too, although
       # the list does not demand it: it carries the entire content of a

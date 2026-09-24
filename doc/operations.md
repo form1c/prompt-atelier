@@ -247,7 +247,7 @@ Sets a new password for an account holding instance administration rights. All s
 
 ### 3.9 `seed_demo`
 
-Adds sample content in the workspace "Beispiele". This script changes the existing installation and asks before doing so.
+Adds sample content, in German in the workspace "Beispiele" or in English in the workspace "Examples". The language follows `locale` in `config.yml`: `de` gives the German package, any other value or none the English one. The output names the package it takes. This script changes the existing installation and asks before doing so.
 
 | Argument | Effect |
 |---|---|
@@ -255,6 +255,7 @@ Adds sample content in the workspace "Beispiele". This script changes the existi
 | `--yes` | Without asking |
 | `--email <address>` | Owner of the created prompts |
 | `--workspace <name>` | A different workspace name |
+| `--language de` or `--language en` | The package in this language, whatever `locale` says. `--remove` takes back the package of the language it is given |
 
 Content outside the created workspace is never touched. `--remove` also recognises renamed sample prompts and leaves your own content in the same workspace alone.
 

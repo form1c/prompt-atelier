@@ -221,6 +221,7 @@
     "copy_raw": "Copia con i segnaposto",
     "copy_raw_hint": "Copia il prompt con tutti i segnaposto, qualunque cosa sia riempita — comprese le parole chiave attive. Funziona anche con i campi obbligatori vuoti. Ctrl+Maiusc+Invio.",
     "copied_raw": "Copiato negli appunti con i segnaposto.",
+    "copy_suffix": "(copia)",
     "copied_workbench": "Versione per questo singolo uso copiata negli appunti.",
     "copy_blocked": "Riempi prima i campi obbligatori.",
     "copy_manual_title": "Il browser ha rifiutato gli appunti",

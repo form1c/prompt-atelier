@@ -358,7 +358,7 @@ module PromptAtelier
       #
       # Entries are addressed by their **position in the file**, not by their
       # title. A file may well carry the same title twice — FA-204 produces
-      # "… (Kopie)" and somebody exports both — and a decision keyed by title
+      # "… (copy)" and somebody exports both — and a decision keyed by title
       # would then apply to a row nobody meant.
       def preview(db, workspace_id:, package:)
         existing = titles_in(db, workspace_id)
@@ -494,7 +494,7 @@ module PromptAtelier
       # not mentioned and collides is **skipped** — the safe answer, and the
       # only one that cannot destroy something by omission.
       def import(db, workspace_id:, owner_id:, package:, decisions: {}, keyword_decisions: {},
-                 now: Time.now)
+                 copy_suffix: nil, now: Time.now)
         plan = preview(db, workspace_id: workspace_id, package: package)
         report = { 'created' => [], 'overwritten' => [], 'skipped' => [],
                    'keywords_created' => [], 'keywords_overwritten' => [], 'keywords_skipped' => [],
@@ -508,7 +508,7 @@ module PromptAtelier
           plan['prompts'].each do |entry|
             apply(db, workspace_id, owner_id, package['prompts'][entry['index']],
                   entry, decisions[entry['index'].to_s] || decisions[entry['index']],
-                  catalogue, report, now)
+                  catalogue, report, now, copy_suffix)
           end
         end
 
@@ -568,14 +568,14 @@ module PromptAtelier
         raise Refused.new(:decision_not_available, { title: name, decision: decision })
       end
 
-      def apply(db, workspace_id, owner_id, source, entry, decision, catalogue, report, now)
+      def apply(db, workspace_id, owner_id, source, entry, decision, catalogue, report, now, copy_suffix = nil)
         return report['skipped'] << entry['title'] if skipping?(entry, decision)
 
         if decision == 'overwrite' && entry['state'] == 'collision'
           overwrite(db, entry['candidates'].first['id'], source, catalogue, owner_id, now)
           report['overwritten'] << entry['title']
         else
-          title = decision == 'copy' ? "#{entry['title']} (Kopie)" : entry['title']
+          title = decision == 'copy' ? Prompts.copy_title(entry['title'], copy_suffix) : entry['title']
           create(db, workspace_id, owner_id, source, title, catalogue, now)
           report['created'] << title
         end

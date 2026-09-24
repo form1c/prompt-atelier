@@ -70,7 +70,7 @@ class BuildTest < PromptAtelier::TestCase
 
     %w[app/app.rb app/config/puma.rb app/public/index.html app/Gemfile app/Gemfile.lock
        app/.bundle/config scripts/install.sh scripts/lib/install.rb
-       config/config.example.yml examples/examples.json VERSION].each do |name|
+       config/config.example.yml examples/examples.de.json examples/examples.en.json VERSION].each do |name|
       assert_path_exists File.join(stage, name)
     end
     assert Dir.exist?(File.join(stage, 'doc', 'examples')), 'the proxy templates travel (18.6)'
@@ -213,7 +213,7 @@ class BuildTest < PromptAtelier::TestCase
     first = File.binread(archives.first)
     FileUtils.rm_f(archives)
 
-    File.write(File.join(@code, 'examples', 'examples.json'), '{"format":"changed"}')
+    File.write(File.join(@code, 'examples', 'examples.de.json'), '{"format":"changed"}')
     build('--shape=universal', '--format=tar.gz', '--skip-tests', epoch: EPOCH)
 
     refute_equal first, File.binread(archives.first)

@@ -438,7 +438,7 @@ Bei `reset_admin_password` ist die Adresse kein Schalter, sondern ein freies Arg
 | `backup` | `--no-rotate` | Sicherung erzeugen |
 | `restore` | `<datei>`, `--yes` | Sicherung zurückspielen |
 | `reset_admin_password` | `[adresse]`, `--generate` | Notfallzugang |
-| `seed_demo` | `--remove`, `--yes`, `--email <adresse>` | Beispielinhalte anlegen oder entfernen |
+| `seed_demo` | `--remove`, `--yes`, `--email <adresse>`, `--language de` oder `en` | Beispielinhalte anlegen oder entfernen |
 | `package` | `[zielverzeichnis]`, `--zip` | Installation als Archiv ausgeben |
 | `export_all` | `[datei]` | Instanz als Umzugsdatei ausgeben |
 | `import_all` | `<datei>` | Umzugsdatei in eine leere Instanz einspielen |

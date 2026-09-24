@@ -132,6 +132,21 @@ describe('Duplicating (FA-204, TF-306, TF-352)', () => {
     expect(sent(server, '/duplicate').workspace_id).toBe(9)
   })
 
+  // TF-306b: the copy's title ends in the word of the language on the screen.
+  // The suite runs in English, so that is what goes out.
+  it('sends the word for "copy" in the language of the interface', async () => {
+    const { wrapper, server } = await screen({
+      at: '/prompt/5/duplicate',
+      routes: routes({ prompt: copy, dropped_keywords: [] })
+    })
+
+    await wrapper.findAll('input[type="radio"]')[1].setValue(true)
+    await confirmButton(wrapper).trigger('click')
+    await settle()
+
+    expect(sent(server, '/duplicate').copy_suffix).toBe('(copy)')
+  })
+
   // TF-352: the copy opens in the editor with the title selected — "… (Kopie)"
   // is a placeholder, not a name.
   it('leads into the editor with the title selected', async () => {
@@ -202,6 +217,7 @@ describe('Moving (FA-207, TF-307)', () => {
     await settle()
 
     expect(sent(server, '/move').workspace_id).toBe(7)
+    expect(sent(server, '/move').copy_suffix, 'a move makes no copy').toBeUndefined()
     // On the wording of the message, not on "Only me": after the move that
     // stands in the visibility select of the prompt screen one lands on as
     // well. The first draft checked for that and was green while the message

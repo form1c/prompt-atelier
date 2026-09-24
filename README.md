@@ -85,7 +85,7 @@ scripts/service_install.sh     # as a system service with automatic start
 ### First steps
 
 1. Open the address in a browser and sign in with the account created during installation.
-2. Optionally load sample content: `scripts/seed_demo.sh`. Calling it with `--remove` takes it back out.
+2. Optionally load sample content: `scripts/seed_demo.sh`, in English or, with `--language de`, in German. Calling it with `--remove` takes it back out.
 3. Open a prompt, fill in the fields and copy the text.
 
 ### Backups

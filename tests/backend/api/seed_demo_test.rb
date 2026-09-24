@@ -174,14 +174,73 @@ class SeedDemoTest < PromptAtelier::TestCase
     assert_operator with_db(dir) { |db| db[:prompts].count }, :>, 40
   end
 
+  # --- two languages --------------------------------------------------------
+  #
+  # The package exists in German and in English. The configured language
+  # decides, and an empty one, the delivered default, means English.
+
+  def test_an_installation_without_a_language_gets_the_english_package
+    dir = installation
+    configure_locale(dir, '')
+
+    output = seed(dir, '--yes')
+
+    assert_match(/examples\.en\.json/, output, 'the output names the package it took')
+    with_db(dir) do |db|
+      workspace = db[:workspaces].first(name: 'Examples')
+      refute_nil workspace
+      assert_equal shipped_prompts('en'), db[:prompts].where(workspace_id: workspace[:id]).count
+      refute_nil db[:prompts].first(title: 'Blog post generator')
+      assert_nil db[:workspaces].first(name: 'Beispiele'), 'and not the German one as well'
+    end
+  end
+
+  def test_the_language_switch_overrides_the_configuration
+    dir = installation # configured as German
+
+    seed(dir, '--yes', '--language', 'en')
+
+    with_db(dir) { |db| refute_nil db[:workspaces].first(name: 'Examples') }
+  end
+
+  # Each package carries its own marker, so taking one back leaves the other.
+  def test_removing_one_language_leaves_the_other
+    dir = installation
+    seed(dir, '--yes')
+    seed(dir, '--yes', '--language', 'en')
+
+    seed(dir, '--remove', '--language', 'en')
+
+    with_db(dir) do |db|
+      examples = db[:workspaces].first(name: 'Examples')
+      beispiele = db[:workspaces].first(name: 'Beispiele')
+      assert_equal 0, db[:prompts].where(workspace_id: examples[:id]).count
+      assert_equal shipped_prompts, db[:prompts].where(workspace_id: beispiele[:id]).count
+    end
+  end
+
+  def test_an_unknown_language_is_refused_and_nothing_is_written
+    dir = installation
+
+    output = seed(dir, '--yes', '--language', 'fr', expect_failure: true)
+
+    assert_match(/Unknown language: fr/, output)
+    with_db(dir) { |db| assert_equal 0, db[:prompts].count }
+  end
+
   private
+
+  def configure_locale(dir, value)
+    path = File.join(dir, 'config', 'config.yml')
+    File.write(path, YAML.dump(YAML.safe_load(File.read(path)).merge('locale' => value)))
+  end
 
   # How many prompts the delivered package holds — read from it rather than
   # written down here. A number in a test is a number somebody has to keep in
   # step with the data, and the day it is wrong the test says "the script is
   # broken" about a package that simply gained an example (AP-23 added four).
-  def shipped_prompts
-    JSON.parse(File.read(File.join(CODE_ROOT, 'examples', 'examples.json'),
+  def shipped_prompts(language = 'de')
+    JSON.parse(File.read(File.join(CODE_ROOT, 'examples', "examples.#{language}.json"),
                          encoding: 'UTF-8'))['prompts'].size
   end
 

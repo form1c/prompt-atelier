@@ -20,13 +20,14 @@ import { pieces } from '../../frontend/src/util/preview.js'
 // write — and it lies in the tree anyway (BT-17, FA-802).
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const PACKAGE = JSON.parse(
-  readFileSync(path.resolve(HERE, '..', '..', 'examples', 'examples.json'), 'utf8')
-)
+// Both packages, German and English. The English one is a translation, and a
+// translation can break a shape the German original had.
+const PACKAGES = ['de', 'en'].map((language) => [language, JSON.parse(
+  readFileSync(path.resolve(HERE, '..', '..', 'examples', `examples.${language}.json`), 'utf8')
+)])
 
-const KEYWORDS = Object.fromEntries(PACKAGE.keywords.map((keyword) => [keyword.name, keyword]))
-
-function inputFor (prompt, values) {
+function inputFor (PACKAGE, prompt, values) {
+  const KEYWORDS = Object.fromEntries(PACKAGE.keywords.map((keyword) => [keyword.name, keyword]))
   return {
     body: prompt.body,
     variables: (prompt.variables ?? []).map((variable) => ({ ...variable, value: values(variable) })),
@@ -53,7 +54,13 @@ function withoutSlots (shown) {
     .join('')
 }
 
-describe('The example package in the preview', () => {
+// The prompt the finding was reported on, in either package.
+const REPORTED = {
+  de: { title: 'Protokollauszug deuten', key: 'auszug', joined: 'Protokollauszug:\n\nWas ist passiert' },
+  en: { title: 'Read a log excerpt', key: 'excerpt', joined: 'log excerpt:\n\nWhat happened' }
+}
+
+describe.each(PACKAGES)('The example package (%s) in the preview', (language, PACKAGE) => {
   // Without this check the package could shrink or lose its shapes, and
   // everything below would stay green without checking anything any more.
   it('contains the shapes it is about', () => {
@@ -70,7 +77,7 @@ describe('The example package in the preview', () => {
   // and exactly what gets copied and counted has to come back.
   it('shows for every prompt the finished text plus placeholders — empty', () => {
     for (const prompt of PACKAGE.prompts) {
-      const input = inputFor(prompt, nothing)
+      const input = inputFor(PACKAGE, prompt, nothing)
       const shown = renderMarked({ ...input, showPlaceholders: true })
 
       expect(normalizeText(withoutSlots(shown)), prompt.title).toBe(render(input).text)
@@ -83,7 +90,7 @@ describe('The example package in the preview', () => {
   // out again.
   it('shows for every prompt exactly the finished text — filled in', () => {
     for (const prompt of PACKAGE.prompts) {
-      const input = inputFor(prompt, something)
+      const input = inputFor(PACKAGE, prompt, something)
       const shown = renderMarked({ ...input, showPlaceholders: true })
 
       expect(shown.text, prompt.title).toBe(render(input).text)
@@ -98,7 +105,7 @@ describe('The example package in the preview', () => {
   // nothing into the finished text and the blank lines collapse.
   it('leaves every variable on its own line there in the preview too', () => {
     for (const prompt of PACKAGE.prompts) {
-      const shown = renderMarked({ ...inputFor(prompt, nothing), showPlaceholders: true })
+      const shown = renderMarked({ ...inputFor(PACKAGE, prompt, nothing), showPlaceholders: true })
 
       for (const variable of prompt.variables ?? []) {
         const slot = `{{${variable.key}}}`
@@ -117,13 +124,14 @@ describe('The example package in the preview', () => {
   // because the preview passes everything through unchanged: in the finished
   // text the blank line is gone, because nothing stands there to hold it.
   it('lets them collapse in the finished text — nothing stands there after all', () => {
-    const auszug = PACKAGE.prompts.find((prompt) => prompt.title === 'Protokollauszug deuten')
+    const reported = REPORTED[language]
+    const auszug = PACKAGE.prompts.find((prompt) => prompt.title === reported.title)
 
     expect(auszug, 'der gemeldete Prompt gehört zum Paket').toBeDefined()
-    expect(auszug.body).toContain('\n\n{{auszug}}\n\n')
+    expect(auszug.body).toContain(`\n\n{{${reported.key}}}\n\n`)
 
-    const finished = render(inputFor(auszug, nothing)).text
-    expect(finished).not.toContain('{{auszug}}')
-    expect(finished).toContain('Protokollauszug:\n\nWas ist passiert')
+    const finished = render(inputFor(PACKAGE, auszug, nothing)).text
+    expect(finished).not.toContain(`{{${reported.key}}}`)
+    expect(finished).toContain(reported.joined)
   })
 })

@@ -414,14 +414,29 @@ module PromptAtelier
 
       # --- duplicating (FA-204) ----------------------------------------------
 
+      # What a copy's title ends in. The server holds no translations, the
+      # interface does, so the interface sends the word in the language it is
+      # showing. Whatever is not a short piece of text is not trusted as one,
+      # and a caller that sends nothing, an older client or a script, gets the
+      # English word.
+      COPY_SUFFIX = '(copy)'
+      COPY_SUFFIX_MAX = 40
+
+      def copy_title(title, suffix = nil)
+        wanted = suffix.is_a?(String) ? suffix.strip : ''
+        usable = !wanted.empty? && wanted.length <= COPY_SUFFIX_MAX && !wanted.match?(/[[:cntrl:]]/)
+
+        "#{title} #{usable ? wanted : COPY_SUFFIX}"
+      end
+
       # Returns the new id and the keywords that could not be carried over.
       # Naming them is part of the requirement: silently dropping a keyword
       # would leave the copy rendering differently from the original with no
       # sign of why.
-      def duplicate(db, source, target_workspace_id:, actor_id:, now: Time.now)
+      def duplicate(db, source, target_workspace_id:, actor_id:, copy_suffix: nil, now: Time.now)
         id = db[:prompts].insert(
           workspace_id: target_workspace_id, owner_id: actor_id,
-          title: "#{source[:title]} (Kopie)", description: source[:description],
+          title: copy_title(source[:title], copy_suffix), description: source[:description],
           body: source[:body], model_hint: source[:model_hint],
           # A copy starts private and as a draft, whoever made it. Inheriting
           # the visibility would publish it into the target workspace as a

@@ -103,6 +103,19 @@ class TransferApiTest < PromptAtelier::TestCase
                  'the size is checked before the JSON is read'
   end
 
+  # TF-306b over the wire: the endpoint hands the interface's word for "copy"
+  # on to the import. A mutation probe is what this case is for, because the
+  # service tests call the service directly and never pass the endpoint.
+  def test_tf306b_the_import_takes_the_copy_suffix_it_is_sent
+    sign_in(:sabine)
+    csrf(:post, "#{prefix}/import", { workspace_id: marketing, content: JSON.generate(package) })
+    csrf(:post, "#{prefix}/import", { workspace_id: marketing, content: JSON.generate(package),
+                                      decisions: { '0' => 'copy' }, copy_suffix: '(copia)' })
+
+    assert_equal 200, last_response.status
+    assert_equal ['Aus einer Datei (copia)'], JSON.parse(last_response.body).dig('report', 'created')
+  end
+
   # --- FA-802: no writing without a preview ---------------------------------
 
   def test_the_preview_writes_nothing
@@ -289,17 +302,26 @@ class TransferApiTest < PromptAtelier::TestCase
   # this one covers what is really in the box (TF-448, TF-449).
   def test_the_shipped_example_package_imports_as_it_stands
     sign_in(:sabine)
-    content = File.read(File.join(CODE_ROOT, 'examples', 'examples.json'))
+    # Both into the same workspace. The four prompts that are written in other
+    # languages on purpose carry the same title in both packages, so the second
+    # import meets them as collisions and skips them, as it should.
+    titles = {}
+    %w[de en].each do |language|
+      content = File.read(File.join(CODE_ROOT, 'examples', "examples.#{language}.json"))
 
-    csrf(:post, "#{prefix}/import", { workspace_id: marketing, content: content })
-    assert_equal 200, last_response.status, last_response.body
+      csrf(:post, "#{prefix}/import", { workspace_id: marketing, content: content })
+      assert_equal 200, last_response.status, last_response.body
 
-    report = JSON.parse(last_response.body)['report']
-    # Counted out of the package, not written down here: an example added to
-    # the delivery must not read as a broken importer (AP-23 added four).
-    assert_equal JSON.parse(content)['prompts'].size, report['created'].size
-    assert_empty report['keywords_missing'], 'the package defines every keyword it uses'
-    assert_empty report['unknown_fields'], 'and carries no field the format does not know'
+      report = JSON.parse(last_response.body)['report']
+      # Counted out of the package, not written down here: an example added to
+      # the delivery must not read as a broken importer (AP-23 added four).
+      titles[language] = JSON.parse(content)['prompts'].map { |prompt| prompt['title'] }
+      already_here = language == 'en' ? (titles['en'] & titles['de']).size : 0
+      assert_equal titles[language].size - already_here, report['created'].size, language
+      assert_equal already_here, report['skipped'].size, language
+      assert_empty report['keywords_missing'], "#{language}: the package defines every keyword it uses"
+      assert_empty report['unknown_fields'], "#{language}: and carries no field the format does not know"
+    end
   end
 
   private

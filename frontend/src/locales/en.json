@@ -221,6 +221,7 @@
     "copy_raw": "Copy with placeholders",
     "copy_raw_hint": "Copies the prompt with every placeholder standing, whatever is filled in — the switched-on keywords included. Works even with required fields empty. Ctrl+Shift+Enter.",
     "copied_raw": "Copied to the clipboard with placeholders.",
+    "copy_suffix": "(copy)",
     "copied_workbench": "Version for this one use copied to the clipboard.",
     "copy_blocked": "Fill in the required fields first.",
     "copy_manual_title": "The browser refused the clipboard",

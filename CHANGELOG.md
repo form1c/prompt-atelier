@@ -4,17 +4,19 @@ All notable changes to this project are recorded here. The format follows [Keep 
 
 ## [1.1.0] - 2026-09-24
 
-Three requests from users, and three corrections found while working on them.
+Three requests from users, an English example package, and the corrections found while working on them.
 
 ### Added
 
 - **Choose what an import brings in.** Every prompt and keyword of a file that does not exist in the workspace yet can be created or skipped, and one choice sets all new entries at once. Creating is the default, so a file taken as it is arrives as before. When a skipped keyword is named by a prompt that is created, the preview says so, because that prompt arrives without it.
 - **Copy the text of a keyword from the list.** Every keyword in the list has a copy button, also for those who may only read keywords. Until now the text was reachable only through the edit form, which is closed to them. If the browser refuses the clipboard, the text is offered for selecting by hand, as on the prompt screen.
+- **An English example package.** The sample content now comes in English and in German. `scripts/seed_demo.sh` takes the package that matches `locale` in `config.yml`, English when none is set, and `--language de` or `--language en` chooses directly. The German file is now called `examples/examples.de.json`.
 
 ### Changed
 
 - **The copy buttons stay in sight beside a long preview.** The bar with both copy buttons stays at the bottom of the window on every screen width while the preview is visible. Before, it did so only on narrow screens.
 - **Notices appear at the top right, below the header.** At the bottom they covered the copy button that had just been pressed.
+- **The title of a copy ends in the word for copy in the language of the interface**, for example `(copy)` or `(copie)`. Before, it was always the German `(Kopie)`. This applies to duplicating a prompt and to importing an entry as a copy.
 - An import request that sends a decision the preview did not offer for a new entry, such as overwriting it, is refused. A request without a decision for a new entry creates it, as before.
 - The browser tests leave WebKit out unless `scripts/run_tests.sh` is called with `--webkit`. Chromium, Firefox and the narrow screen run as before.
 

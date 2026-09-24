@@ -221,6 +221,7 @@
     "copy_raw": "Copier avec les espaces réservés",
     "copy_raw_hint": "Copie le prompt avec tous ses espaces réservés, quel que soit ce qui est rempli — les mots-clés activés compris. Fonctionne même avec des champs obligatoires vides. Ctrl+Maj+Entrée.",
     "copied_raw": "Copié dans le presse-papiers avec les espaces réservés.",
+    "copy_suffix": "(copie)",
     "copied_workbench": "Version pour cet usage unique copiée dans le presse-papiers.",
     "copy_blocked": "Remplissez d'abord les champs obligatoires.",
     "copy_manual_title": "Le navigateur a refusé le presse-papiers",
