@@ -18,11 +18,14 @@ require_relative '../../test_helper'
 # comparison. This one was simply never made, which is how the plan came to
 # understate its own scope by eight packages.
 class PlanPackagesTest < PromptAtelier::TestCase
-  PLAN = PromptAtelier::TestSupport.project_document('Umsetzungsplan.md')
+  # Archived on 2026-09-24, all packages closed. The check stays: the file is
+  # read where it now lives, so the case still runs instead of skipping.
+  PLAN_FILE = 'archiv/Umsetzungsplan-2026-08-11.md'
+  PLAN = PromptAtelier::TestSupport.project_document(PLAN_FILE)
 
   def setup
     super
-    skip PromptAtelier::TestSupport.document_missing('Umsetzungsplan.md') if PLAN.nil?
+    skip PromptAtelier::TestSupport.document_missing(PLAN_FILE) if PLAN.nil?
   end
 
   # A written-out package: a level-two heading naming it.

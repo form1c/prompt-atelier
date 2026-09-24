@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Fassung** | 2.1 |
-| **Stand** | 2026-08-30 |
+| **Fassung** | 2.2 |
+| **Stand** | 2026-09-24 |
 | **Zielgruppe** | Entwicklung am Quelltext |
 | **Nicht enthalten** | Installation und Betrieb einer Auslieferung. Siehe `installation.de.md` und `operations.de.md` |
 
@@ -140,7 +140,8 @@ project/
 
 ```bash
 scripts/run_tests.sh                  # Backend und Frontend
-scripts/run_tests.sh --e2e            # zusätzlich die Browsertests
+scripts/run_tests.sh --e2e            # zusätzlich die Browsertests, ohne WebKit
+scripts/run_tests.sh --e2e --webkit   # zusätzlich die Browsertests, mit WebKit
 scripts/run_tests.sh --only=backend   # einzelne Suite
 ```
 
@@ -148,7 +149,7 @@ scripts/run_tests.sh --only=backend   # einzelne Suite
 |---|---|---|
 | Backend | Minitest | Fachlogik, Schnittstelle, Skripte |
 | Frontend | Vitest | Komponenten und Zustand |
-| Browser | Playwright | durchgehende Abläufe in Chromium, Firefox, WebKit und bei 360 px Breite |
+| Browser | Playwright | durchgehende Abläufe in Chromium, Firefox und bei 360 px Breite, in WebKit mit `--webkit` |
 
 Testläufe legen ihre Ergebnisse unter `test-results/` ab. Das Verzeichnis liegt außerhalb von `project/`, damit ein Testlauf die Entwicklungsdatenbank nicht berühren kann.
 
@@ -173,6 +174,8 @@ Drei Prüfungen vergleichen den Quelltext mit internen Projektdokumenten, statt 
 | `plan_packages_test` | Jedes Arbeitspaket steht in der Projektübersicht |
 
 **In einem Klon überspringen diese neun Fälle**, mit Angabe des Grundes in der Ausgabe. Sie benötigen Dateien, die nicht veröffentlicht werden. Ein übersprungener Lauf ist erwartet und kein Fehlschlag.
+
+**Kennungen in Kommentaren.** Kommentare im Quelltext nennen Anforderungen und Testfälle mit kurzen Kennungen, etwa mit den Vorsilben `FA-`, `NFA-`, `SEC-` und `TF-`. Sie verweisen auf dieselben internen Dokumente. Die Erklärung neben einer Kennung soll ohne sie vollständig sein.
 
 ### 4.3 Sprachprüfungen
 

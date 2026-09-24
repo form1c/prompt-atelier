@@ -39,6 +39,17 @@ class BrowserProjectsTest < PromptAtelier::TestCase
     end
   end
 
+  # WebKit runs on request only, decided by the operator on 2026-09-24. The
+  # other three must still run by default, and --webkit must bring it back,
+  # otherwise NFA-10 could not be shown at all any more.
+  def test_webkit_runs_only_on_request
+    default = PromptAtelier::RunTests.e2e_selection(['--e2e'])
+    requested = PromptAtelier::RunTests.e2e_selection(['--e2e', '--webkit'])
+
+    assert_equal %w[chromium firefox 360px], default
+    assert_equal PromptAtelier::RunTests::E2E_PROJECTS, requested
+  end
+
   # TF-709: the core workflow at the narrowest supported width. A project whose
   # viewport quietly grew back to the desktop default would still be green —
   # over a screen nobody asked about.

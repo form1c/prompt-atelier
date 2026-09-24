@@ -16,6 +16,7 @@ Three requests from users, and three corrections found while working on them.
 - **The copy buttons stay in sight beside a long preview.** The bar with both copy buttons stays at the bottom of the window on every screen width while the preview is visible. Before, it did so only on narrow screens.
 - **Notices appear at the top right, below the header.** At the bottom they covered the copy button that had just been pressed.
 - An import request that sends a decision the preview did not offer for a new entry, such as overwriting it, is refused. A request without a decision for a new entry creates it, as before.
+- The browser tests leave WebKit out unless `scripts/run_tests.sh` is called with `--webkit`. Chromium, Firefox and the narrow screen run as before.
 
 ### Fixed
 

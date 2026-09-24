@@ -33,7 +33,7 @@ module PromptAtelier
     # reports "All tests that ran have passed" and exits 0 — and whoever typed
     # it believes the browser cases ran. Found by typing `--help`, which ran
     # the entire suite instead of printing anything.
-    SWITCHES = ['--e2e', '--measure'].freeze
+    SWITCHES = ['--e2e', '--measure', '--webkit'].freeze
 
     def run(argv = [])
       e2e     = argv.include?('--e2e')
@@ -50,7 +50,7 @@ module PromptAtelier
       outcomes = []
       outcomes << backend_tests(target)  if only.nil? || only == 'backend'
       outcomes << frontend_tests(target) if only.nil? || only == 'frontend'
-      outcomes << e2e_tests(target)      if e2e && (only.nil? || only == 'e2e')
+      outcomes << e2e_tests(target, e2e_selection(argv)) if e2e && (only.nil? || only == 'e2e')
       outcomes << measurements(target)   if measure && (only.nil? || only == 'measure')
 
       puts
@@ -180,7 +180,17 @@ module PromptAtelier
     # fragile half of the two.
     E2E_PROJECTS = %w[chromium firefox webkit 360px].freeze
 
-    def e2e_tests(target)
+    # Run only on request, with --webkit. The operator decided so on
+    # 2026-09-24: on his machine the WebKit runs leave graphics artefacts on an
+    # external screen, and no WebKit-only fault has been recorded so far.
+    # Skipped out loud, never in silence: the run names what it left out.
+    ON_REQUEST = %w[webkit].freeze
+
+    def e2e_selection(argv)
+      argv.include?('--webkit') ? E2E_PROJECTS : E2E_PROJECTS - ON_REQUEST
+    end
+
+    def e2e_tests(target, projects = E2E_PROJECTS)
       specs = Dir.glob(File.join(tests_dir, 'e2e', '*.spec.js'))
       if specs.empty?
         heading(t('script.tests_e2e'))
@@ -190,7 +200,10 @@ module PromptAtelier
 
       # `all?` would stop at the first failing engine, and the report would say
       # nothing about the other two. All of them run, then the verdict.
-      E2E_PROJECTS.map { |project| e2e_project(target, project) }.all?
+      (E2E_PROJECTS - projects).each do |project|
+        note(t('script.tests_skipped', name: "Playwright (#{project})", reason: 'run with --webkit to include it'))
+      end
+      projects.map { |project| e2e_project(target, project) }.all?
     end
 
     def e2e_project(target, project)

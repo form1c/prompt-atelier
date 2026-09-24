@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Version** | 2.1 |
-| **Date** | 2026-08-30 |
+| **Version** | 2.2 |
+| **Date** | 2026-09-24 |
 | **Audience** | Development on the source |
 | **Not covered** | Installing and running a release. See `installation.md` and `operations.md` |
 
@@ -140,7 +140,8 @@ project/
 
 ```bash
 scripts/run_tests.sh                  # backend and frontend
-scripts/run_tests.sh --e2e            # plus the browser tests
+scripts/run_tests.sh --e2e            # plus the browser tests, without WebKit
+scripts/run_tests.sh --e2e --webkit   # plus the browser tests, WebKit included
 scripts/run_tests.sh --only=backend   # a single suite
 ```
 
@@ -148,7 +149,7 @@ scripts/run_tests.sh --only=backend   # a single suite
 |---|---|---|
 | Backend | Minitest | Domain logic, interface, scripts |
 | Frontend | Vitest | Components and state |
-| Browser | Playwright | End-to-end flows in Chromium, Firefox, WebKit and at 360 px width |
+| Browser | Playwright | End-to-end flows in Chromium, Firefox and at 360 px width, in WebKit with `--webkit` |
 
 Test runs write their output to `test-results/`. That directory lies outside `project/` so that a test run can never touch the development database.
 
@@ -173,6 +174,8 @@ Three checks compare the source against the internal project documents rather th
 | `plan_packages_test` | Every work package appears in the project overview |
 
 **In a clone these nine cases skip**, with the reason stated in the output. They need files that are not published. A skipped run is expected and is not a failure.
+
+**Identifiers in comments.** Comments in the source name requirements and test cases by short identifiers with prefixes such as `FA-`, `NFA-`, `SEC-` and `TF-`. They refer to the same internal documents. The explanation next to an identifier is meant to be complete without it.
 
 ### 4.3 Language checks
 
